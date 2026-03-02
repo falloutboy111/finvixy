@@ -128,7 +128,7 @@ class ProcessExpenseImage implements ShouldQueue
             return;
         }
 
-        $parsed = $bedrockService->parseExpenseDocument($ocrText, $this->expense->organisation_id);
+        $parsed = $bedrockService->parseExpenseDocument($ocrText, $this->expense->organisation_id, $this->expense->user_id);
 
         // Update the expense with extracted data
         $updateData = [

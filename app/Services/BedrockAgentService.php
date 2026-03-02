@@ -37,11 +37,11 @@ class BedrockAgentService
      *     line_items: array<int, array{item_name: string, quantity: float, unit_price: float, total_price: float}>
      * }
      */
-    public function parseExpenseDocument(string $receiptText, int $organisationId): array
+    public function parseExpenseDocument(string $receiptText, int $organisationId, ?int $userId = null): array
     {
         $startTime = microtime(true);
 
-        $categories = ExpenseCategory::getFormattedForAi($organisationId);
+        $categories = implode(', ', ExpenseCategory::getFormattedForAi());
 
         $prompt = <<<PROMPT
         Read the receipt text below and respond with JSON containing: vendor_name, invoice_number, date (YYYY-MM-DD format), total_amount (numeric, no currency symbols), currency (3-letter ISO code), category (from the list below), tax_amount (numeric if present, null otherwise), and line_items (array of objects with item_name, quantity, unit_price, total_price).
@@ -59,7 +59,7 @@ class BedrockAgentService
 
             $parsed = $this->parseResponse($response);
 
-            $this->logUsage($startTime, $receiptText, $response);
+            $this->logUsage($startTime, $receiptText, $response, $organisationId, $userId);
 
             return $parsed;
         } catch (\Throwable $e) {
@@ -162,7 +162,7 @@ class BedrockAgentService
     /**
      * Log AI usage for cost tracking.
      */
-    protected function logUsage(float $startTime, string $input, string $output): void
+    protected function logUsage(float $startTime, string $input, string $output, int $organisationId, ?int $userId = null): void
     {
         $responseTime = (int) round((microtime(true) - $startTime) * 1000);
 
@@ -172,6 +172,8 @@ class BedrockAgentService
         $totalTokens = $promptTokens + $completionTokens;
 
         AiUsageLog::query()->create([
+            'organisation_id' => $organisationId,
+            'user_id' => $userId,
             'service_type' => 'bedrock_agent',
             'model_name' => 'expense_parser',
             'prompt_tokens' => $promptTokens,

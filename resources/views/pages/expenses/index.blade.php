@@ -113,6 +113,21 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
             ->toArray();
     }
 
+    public function getHasProcessingProperty(): bool
+    {
+        $user = Auth::user();
+
+        if (! $user->organisation_id) {
+            return false;
+        }
+
+        return Expense::query()
+            ->where('organisation_id', $user->organisation_id)
+            ->whereIn('status', ['pending', 'processing'])
+            ->whereNotNull('receipt_path')
+            ->exists();
+    }
+
     public function getViewingExpenseProperty(): ?Expense
     {
         if (! $this->viewingExpenseId) {
@@ -188,6 +203,32 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
         $expense->delete();
     }
 
+    public function reprocessExpense(int $id): void
+    {
+        $user = Auth::user();
+        $expense = Expense::query()
+            ->where('organisation_id', $user->organisation_id)
+            ->findOrFail($id);
+
+        if (! $expense->receipt_path) {
+            session()->flash('error', 'No receipt file to reprocess.');
+            return;
+        }
+
+        // Clear previous results
+        $expense->expenseItems()->delete();
+        $expense->update([
+            'status' => 'pending',
+            'extracted_data' => null,
+            'additional_fields' => null,
+        ]);
+
+        // Re-dispatch the processing job
+        ProcessExpenseImage::dispatch($expense);
+
+        session()->flash('message', 'Reprocessing started for "' . $expense->name . '".');
+    }
+
     public function removeReceipt(int $index): void
     {
         unset($this->receipts[$index]);
@@ -195,13 +236,24 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
     }
 } ?>
 
-<div>
+<div @if($this->hasProcessing) wire:poll.3s @endif>
     {{-- Flash message --}}
     @if (session('message'))
         <div class="mb-4">
             <flux:callout variant="success" icon="check-circle">
                 {{ session('message') }}
             </flux:callout>
+        </div>
+    @endif
+
+    {{-- Processing banner --}}
+    @if ($this->hasProcessing)
+        <div class="mb-4 flex items-center gap-3 rounded-xl bg-blue-500/10 ring-1 ring-blue-500/20 px-4 py-3">
+            <svg class="size-5 text-blue-400 animate-spin shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-sm text-blue-300">Receipts are being processed&hellip; This page will update automatically.</p>
         </div>
     @endif
 
@@ -277,12 +329,21 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                     default => 'zinc',
                 };
             @endphp
-            <div class="glow-card rounded-xl p-4 cursor-pointer" wire:click="viewExpense({{ $expense->id }})" wire:key="card-{{ $expense->id }}">
+            <div class="glow-card rounded-xl p-4 cursor-pointer {{ in_array($expense->status, ['pending', 'processing']) ? 'ring-1 ring-emerald-500/30 animate-pulse' : '' }}" wire:click="viewExpense({{ $expense->id }})" wire:key="card-{{ $expense->id }}">
                 <div class="flex items-start gap-3">
                     {{-- Icon --}}
-                    <span class="flex items-center justify-center size-10 rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/20 shrink-0 mt-0.5">
-                        <flux:icon name="document-text" variant="mini" class="size-5 text-emerald-400" />
-                    </span>
+                    @if (in_array($expense->status, ['pending', 'processing']))
+                        <span class="flex items-center justify-center size-10 rounded-lg bg-blue-500/10 ring-1 ring-blue-500/30 shrink-0 mt-0.5">
+                            <svg class="size-5 text-blue-400 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                    @else
+                        <span class="flex items-center justify-center size-10 rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/20 shrink-0 mt-0.5">
+                            <flux:icon name="document-text" variant="mini" class="size-5 text-emerald-400" />
+                        </span>
+                    @endif
 
                     {{-- Content --}}
                     <div class="flex-1 min-w-0">
@@ -322,6 +383,7 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                             <flux:button variant="ghost" size="sm" icon="ellipsis-vertical" />
                             <flux:menu>
                                 <flux:menu.item icon="eye" wire:click="viewExpense({{ $expense->id }})">View details</flux:menu.item>
+                                <flux:menu.item icon="arrow-path" wire:click="reprocessExpense({{ $expense->id }})" wire:confirm="Reprocess this receipt? Previous results will be replaced.">Reprocess</flux:menu.item>
                                 <flux:menu.item icon="trash" variant="danger" wire:click="deleteExpense({{ $expense->id }})" wire:confirm="Are you sure you want to delete this expense?">Delete</flux:menu.item>
                             </flux:menu>
                         </flux:dropdown>
