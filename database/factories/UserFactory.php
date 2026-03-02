@@ -32,6 +32,8 @@ class UserFactory extends Factory
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
+            'whatsapp_enabled' => false,
+            'first_time_login' => true,
         ];
     }
 
