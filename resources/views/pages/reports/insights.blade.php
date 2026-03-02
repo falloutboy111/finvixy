@@ -166,15 +166,17 @@ new #[Title('Insights')] #[Layout('layouts.app.sidebar')] class extends Componen
                 $maxWeek = max(array_column($weeklyData, 'amount') ?: [1]);
             @endphp
 
-            <div class="flex items-end gap-4 h-48">
+            <div class="flex gap-4">
                 @foreach ($weeklyData as $week)
                     @php
                         $height = $maxWeek > 0 ? max(($week['amount'] / $maxWeek) * 100, 4) : 4;
                     @endphp
                     <div class="flex-1 flex flex-col items-center gap-2" wire:key="week-{{ $loop->index }}">
                         <flux:text class="text-xs text-gray-400">R{{ number_format($week['amount'], 0) }}</flux:text>
-                        <div class="w-full rounded-t-lg bg-gradient-to-t from-emerald-600 to-emerald-400 transition-all duration-300"
-                             style="height: {{ $height }}%">
+                        <div class="w-full h-40 flex items-end">
+                            <div class="w-full rounded-t-lg bg-gradient-to-t from-emerald-600 to-emerald-400 transition-all duration-300"
+                                 style="height: {{ $height }}%">
+                            </div>
                         </div>
                         <flux:text class="text-xs text-gray-500">{{ $week['label'] }}</flux:text>
                     </div>

@@ -7,6 +7,7 @@ Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
     Route::livewire('settings/profile', 'pages::settings.profile')->name('profile.edit');
+    Route::livewire('settings/connected-accounts', 'pages::settings.connected-accounts')->name('connected-accounts.edit');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -24,3 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         )
         ->name('two-factor.show');
 });
+
+// Google OAuth callback — no auth middleware, state carries user_id
+Route::get('auth/google/callback', \App\Http\Controllers\GoogleCallbackController::class)
+    ->name('google.callback');

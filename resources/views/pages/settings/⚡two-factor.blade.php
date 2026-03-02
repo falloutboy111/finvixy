@@ -3,12 +3,13 @@
 use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Symfony\Component\HttpFoundation\Response;
 
-new #[Title('Two-factor authentication')] class extends Component {
+new #[Title('Two-factor authentication')] #[Layout('layouts.app.sidebar')] class extends Component {
     public bool $twoFactorEnabled;
 
     public bool $requiresConfirmation;

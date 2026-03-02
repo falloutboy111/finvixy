@@ -122,15 +122,17 @@ new #[Title('Spending Report')] #[Layout('layouts.app.sidebar')] class extends C
                 $maxAmount = max(array_column($chartData, 'amount') ?: [1]);
             @endphp
 
-            <div class="flex items-end gap-2 h-52">
+            <div class="flex gap-2">
                 @foreach ($chartData as $bar)
                     @php
                         $height = $maxAmount > 0 ? max(($bar['amount'] / $maxAmount) * 100, 4) : 4;
                     @endphp
                     <div class="flex-1 flex flex-col items-center gap-2">
                         <flux:text class="text-xs text-gray-400">R{{ number_format($bar['amount'], 0) }}</flux:text>
-                        <div class="w-full rounded-t-lg bg-gradient-to-t from-emerald-600 to-emerald-400 transition-all duration-300"
-                             style="height: {{ $height }}%">
+                        <div class="w-full h-44 flex items-end">
+                            <div class="w-full rounded-t-lg bg-gradient-to-t from-emerald-600 to-emerald-400 transition-all duration-300"
+                                 style="height: {{ $height }}%">
+                            </div>
                         </div>
                         <flux:text class="text-xs text-gray-500">{{ $bar['label'] }}</flux:text>
                     </div>

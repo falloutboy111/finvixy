@@ -172,6 +172,9 @@ class ProcessExpenseImage implements ShouldQueue
         // Run duplicate detection
         $this->detectDuplicate($parsed);
 
+        // Auto-sync to Google Drive if connected
+        SyncExpenseToDrive::dispatch($this->expense);
+
         Log::info('Expense processed successfully', [
             'expense_id' => $this->expense->id,
             'vendor' => $parsed['vendor_name'],

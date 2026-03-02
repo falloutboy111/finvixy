@@ -240,23 +240,27 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
             @endphp
 
             @if ($hasData)
-                <div class="flex items-end gap-3 h-52">
+                <div class="flex gap-3">
                     @foreach ($chartData as $bar)
                         @php $height = max(($bar['amount'] / $maxAmount) * 100, 6); @endphp
                         <div class="flex-1 flex flex-col items-center gap-2" wire:key="bar-{{ $loop->index }}">
                             <span class="text-[11px] font-medium text-zinc-400">R{{ number_format($bar['amount'], 0) }}</span>
-                            <div class="w-full rounded-lg bg-gradient-to-t from-emerald-600 to-emerald-400 transition-all duration-500"
-                                 style="height: {{ $height }}%"></div>
+                            <div class="w-full h-44 flex items-end">
+                                <div class="w-full rounded-lg bg-gradient-to-t from-emerald-600 to-emerald-400 transition-all duration-500"
+                                     style="height: {{ $height }}%"></div>
+                            </div>
                             <span class="text-[11px] text-zinc-500">{{ $bar['label'] }}</span>
                         </div>
                     @endforeach
                 </div>
             @else
-                <div class="flex items-end gap-3 h-52">
+                <div class="flex gap-3">
                     @foreach ($chartData as $bar)
                         <div class="flex-1 flex flex-col items-center gap-2" wire:key="bar-{{ $loop->index }}">
                             <span class="text-[11px] font-medium text-zinc-600">R0</span>
-                            <div class="w-full rounded-lg bg-zinc-800/60 border border-dashed border-zinc-700/50" style="height: 20%"></div>
+                            <div class="w-full h-44 flex items-end">
+                                <div class="w-full rounded-lg bg-zinc-800/60 border border-dashed border-zinc-700/50" style="height: 20%"></div>
+                            </div>
                             <span class="text-[11px] text-zinc-500">{{ $bar['label'] }}</span>
                         </div>
                     @endforeach

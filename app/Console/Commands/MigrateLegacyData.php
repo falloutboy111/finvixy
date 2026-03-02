@@ -113,19 +113,23 @@ class MigrateLegacyData extends Command
         $bar = $this->output->createProgressBar($rows->count());
 
         foreach ($rows as $row) {
-            $org = Organisation::updateOrCreate(
-                ['legacy_uuid' => $row->id],
-                [
-                    'name' => $row->name,
-                    'logo_path' => $row->logo_path,
-                    'email' => $row->email,
-                    'phone' => $row->phone,
-                    'tax_id' => $row->tax_id,
-                    'status' => $row->status ?? 'active',
-                    'currency' => $row->currency ?? 'ZAR',
-                    'timezone' => $row->timezone ?? 'Africa/Johannesburg',
-                ],
-            );
+            $org = Organisation::withoutTimestamps(function () use ($row) {
+                return Organisation::updateOrCreate(
+                    ['legacy_uuid' => $row->id],
+                    [
+                        'name' => $row->name,
+                        'logo_path' => $row->logo_path,
+                        'email' => $row->email,
+                        'phone' => $row->phone,
+                        'tax_id' => $row->tax_id,
+                        'status' => $row->status ?? 'active',
+                        'currency' => $row->currency ?? 'ZAR',
+                        'timezone' => $row->timezone ?? 'Africa/Johannesburg',
+                        'created_at' => $row->created_at,
+                        'updated_at' => $row->updated_at,
+                    ],
+                );
+            });
 
             $this->orgMap[$row->id] = $org->id;
             $org->wasRecentlyCreated ? $this->created++ : $this->updated++;
@@ -162,23 +166,27 @@ class MigrateLegacyData extends Command
                 continue; // Skip users whose org wasn't migrated
             }
 
-            $user = User::updateOrCreate(
-                ['legacy_uuid' => $row->id],
-                [
-                    'organisation_id' => $orgId,
-                    'name' => $row->name,
-                    'email' => $row->email,
-                    'email_verified_at' => $row->email_verified_at ?? now(),
-                    'password' => $row->password, // Already hashed
-                    'avatar' => $row->avatar,
-                    'whatsapp_number' => $row->whatsapp_number,
-                    'whatsapp_enabled' => $row->whatsapp_enabled ?? false,
-                    'email_2fa_enabled_at' => now(),
-                    'first_time_login' => $row->first_time_login ?? true,
-                    'last_login_at' => $row->last_login_at,
-                    'last_login_ip' => $row->last_login_ip,
-                ],
-            );
+            $user = User::withoutTimestamps(function () use ($row, $orgId) {
+                return User::updateOrCreate(
+                    ['legacy_uuid' => $row->id],
+                    [
+                        'organisation_id' => $orgId,
+                        'name' => $row->name,
+                        'email' => $row->email,
+                        'email_verified_at' => $row->email_verified_at ?? now(),
+                        'password' => $row->password, // Already hashed
+                        'avatar' => $row->avatar,
+                        'whatsapp_number' => $row->whatsapp_number,
+                        'whatsapp_enabled' => $row->whatsapp_enabled ?? false,
+                        'email_2fa_enabled_at' => now(),
+                        'first_time_login' => $row->first_time_login ?? true,
+                        'last_login_at' => $row->last_login_at,
+                        'last_login_ip' => $row->last_login_ip,
+                        'created_at' => $row->created_at,
+                        'updated_at' => $row->updated_at,
+                    ],
+                );
+            });
 
             $this->userMap[$row->id] = $user->id;
             $user->wasRecentlyCreated ? $this->created++ : $this->updated++;
@@ -213,16 +221,20 @@ class MigrateLegacyData extends Command
                 continue;
             }
 
-            $cat = ExpenseCategory::updateOrCreate(
-                ['organisation_id' => $orgId, 'slug' => $row->slug],
-                [
-                    'legacy_uuid' => $row->id,
-                    'name' => $row->name,
-                    'description' => $row->description,
-                    'is_default' => $row->is_default ?? false,
-                    'sort_order' => $row->sort_order ?? 0,
-                ],
-            );
+            $cat = ExpenseCategory::withoutTimestamps(function () use ($row, $orgId) {
+                return ExpenseCategory::updateOrCreate(
+                    ['organisation_id' => $orgId, 'slug' => $row->slug],
+                    [
+                        'legacy_uuid' => $row->id,
+                        'name' => $row->name,
+                        'description' => $row->description,
+                        'is_default' => $row->is_default ?? false,
+                        'sort_order' => $row->sort_order ?? 0,
+                        'created_at' => $row->created_at,
+                        'updated_at' => $row->updated_at,
+                    ],
+                );
+            });
 
             $cat->wasRecentlyCreated ? $this->created++ : $this->updated++;
             $bar->advance();
@@ -263,25 +275,29 @@ class MigrateLegacyData extends Command
 
                 $status = in_array($row->status, $validStatuses) ? $row->status : 'pending';
 
-                $expense = Expense::updateOrCreate(
-                    ['legacy_uuid' => $row->id],
-                    [
-                        'organisation_id' => $orgId,
-                        'user_id' => $userId,
-                        'name' => $row->name ?? 'Unnamed Expense',
-                        'category' => $row->category,
-                        'amount' => $row->amount ?? 0,
-                        'tax' => $row->tax,
-                        'date' => $row->date ?? now(),
-                        'image_path' => $row->image_path,
-                        'receipt_path' => $row->receipt_path,
-                        'additional_fields' => $row->additional_fields,
-                        'extracted_data' => $row->extracted_data,
-                        'notes' => $row->notes,
-                        'status' => $status,
-                        'is_duplicate' => $row->is_dup ?? false,
-                    ],
-                );
+                $expense = Expense::withoutTimestamps(function () use ($row, $orgId, $userId, $status) {
+                    return Expense::updateOrCreate(
+                        ['legacy_uuid' => $row->id],
+                        [
+                            'organisation_id' => $orgId,
+                            'user_id' => $userId,
+                            'name' => $row->name ?? 'Unnamed Expense',
+                            'category' => $row->category,
+                            'amount' => $row->amount ?? 0,
+                            'tax' => $row->tax,
+                            'date' => $row->date,
+                            'image_path' => $row->image_path,
+                            'receipt_path' => $row->receipt_path,
+                            'additional_fields' => $row->additional_fields,
+                            'extracted_data' => $row->extracted_data,
+                            'notes' => $row->notes,
+                            'status' => $status,
+                            'is_duplicate' => $row->is_dup ?? false,
+                            'created_at' => $row->created_at,
+                            'updated_at' => $row->updated_at,
+                        ],
+                    );
+                });
 
                 $this->expenseMap[$row->id] = $expense->id;
                 $expense->wasRecentlyCreated ? $this->created++ : $this->updated++;
@@ -327,17 +343,21 @@ class MigrateLegacyData extends Command
                     continue;
                 }
 
-                $item = ExpenseItem::updateOrCreate(
-                    ['legacy_uuid' => $row->id],
-                    [
-                        'expense_id' => $expenseId,
-                        'name' => $row->name,
-                        'description' => $row->description,
-                        'qty' => $row->qty ?? 1,
-                        'price' => $row->price ?? 0,
-                        'total' => $row->total ?? 0,
-                    ],
-                );
+                $item = ExpenseItem::withoutTimestamps(function () use ($row, $expenseId) {
+                    return ExpenseItem::updateOrCreate(
+                        ['legacy_uuid' => $row->id],
+                        [
+                            'expense_id' => $expenseId,
+                            'name' => $row->name,
+                            'description' => $row->description,
+                            'qty' => $row->qty ?? 1,
+                            'price' => $row->price ?? 0,
+                            'total' => $row->total ?? 0,
+                            'created_at' => $row->created_at,
+                            'updated_at' => $row->updated_at,
+                        ],
+                    );
+                });
 
                 $item->wasRecentlyCreated ? $this->created++ : $this->updated++;
             }
@@ -374,20 +394,24 @@ class MigrateLegacyData extends Command
                 continue;
             }
 
-            $account = ConnectedAccount::updateOrCreate(
-                ['legacy_uuid' => $row->id],
-                [
-                    'organisation_id' => $orgId,
-                    'user_id' => $userId,
-                    'provider' => $row->provider ?? 'google_drive',
-                    'email' => $row->email,
-                    'credentials' => $row->credentials,
-                    'settings' => $row->settings,
-                    'is_active' => $row->is_active ?? true,
-                    'last_sync_at' => $row->last_sync_at,
-                    'expires_at' => $row->expires_at,
-                ],
-            );
+            $account = ConnectedAccount::withoutTimestamps(function () use ($row, $orgId, $userId) {
+                return ConnectedAccount::updateOrCreate(
+                    ['legacy_uuid' => $row->id],
+                    [
+                        'organisation_id' => $orgId,
+                        'user_id' => $userId,
+                        'provider' => $row->provider ?? 'google_drive',
+                        'email' => $row->email,
+                        'credentials' => $row->credentials,
+                        'settings' => $row->settings,
+                        'is_active' => $row->is_active ?? true,
+                        'last_sync_at' => $row->last_sync_at,
+                        'expires_at' => $row->expires_at,
+                        'created_at' => $row->created_at,
+                        'updated_at' => $row->updated_at,
+                    ],
+                );
+            });
 
             $account->wasRecentlyCreated ? $this->created++ : $this->updated++;
             $bar->advance();
@@ -424,27 +448,31 @@ class MigrateLegacyData extends Command
                     continue;
                 }
 
-                $log = AiUsageLog::updateOrCreate(
-                    ['legacy_uuid' => $row->id],
-                    [
-                        'organisation_id' => $orgId,
-                        'user_id' => $row->user_id ? ($this->userMap[$row->user_id] ?? null) : null,
-                        'expense_id' => $row->expense_id ? ($this->expenseMap[$row->expense_id] ?? null) : null,
-                        'service_type' => $row->service_type,
-                        'model_name' => $row->model_name,
-                        'prompt_tokens' => $row->prompt_tokens ?? 0,
-                        'completion_tokens' => $row->completion_tokens ?? 0,
-                        'total_tokens' => $row->total_tokens ?? 0,
-                        'input_characters' => $row->input_characters ?? 0,
-                        'output_characters' => $row->output_characters ?? 0,
-                        'estimated_cost' => $row->estimated_cost ?? 0,
-                        'currency' => $row->currency ?? 'USD',
-                        'request_summary' => $row->request_summary,
-                        'response_time_ms' => $row->response_time_ms,
-                        'success' => $row->success ?? true,
-                        'error_message' => $row->error_message,
-                    ],
-                );
+                $log = AiUsageLog::withoutTimestamps(function () use ($row, $orgId) {
+                    return AiUsageLog::updateOrCreate(
+                        ['legacy_uuid' => $row->id],
+                        [
+                            'organisation_id' => $orgId,
+                            'user_id' => $row->user_id ? ($this->userMap[$row->user_id] ?? null) : null,
+                            'expense_id' => $row->expense_id ? ($this->expenseMap[$row->expense_id] ?? null) : null,
+                            'service_type' => $row->service_type,
+                            'model_name' => $row->model_name,
+                            'prompt_tokens' => $row->prompt_tokens ?? 0,
+                            'completion_tokens' => $row->completion_tokens ?? 0,
+                            'total_tokens' => $row->total_tokens ?? 0,
+                            'input_characters' => $row->input_characters ?? 0,
+                            'output_characters' => $row->output_characters ?? 0,
+                            'estimated_cost' => $row->estimated_cost ?? 0,
+                            'currency' => $row->currency ?? 'USD',
+                            'request_summary' => $row->request_summary,
+                            'response_time_ms' => $row->response_time_ms,
+                            'success' => $row->success ?? true,
+                            'error_message' => $row->error_message,
+                            'created_at' => $row->created_at,
+                            'updated_at' => $row->updated_at,
+                        ],
+                    );
+                });
 
                 $log->wasRecentlyCreated ? $this->created++ : $this->updated++;
             }
@@ -472,20 +500,24 @@ class MigrateLegacyData extends Command
 
         $this->legacy()->table('whatsapp_webhooks')->orderBy('created_at')->chunk(500, function ($rows) {
             foreach ($rows as $row) {
-                $webhook = WhatsappWebhook::updateOrCreate(
-                    ['legacy_uuid' => $row->id],
-                    [
-                        'from' => $row->from,
-                        'message_id' => $row->message_id,
-                        'type' => $row->type ?? 'unknown',
-                        'payload' => $row->payload,
-                        'expense_id' => $row->expense_id ? ($this->expenseMap[$row->expense_id] ?? null) : null,
-                        'user_id' => $row->user_id ? ($this->userMap[$row->user_id] ?? null) : null,
-                        'organisation_id' => $row->organization_id ? ($this->orgMap[$row->organization_id] ?? null) : null,
-                        'status' => $row->status ?? 'received',
-                        'error_message' => $row->error_message,
-                    ],
-                );
+                $webhook = WhatsappWebhook::withoutTimestamps(function () use ($row) {
+                    return WhatsappWebhook::updateOrCreate(
+                        ['legacy_uuid' => $row->id],
+                        [
+                            'from' => $row->from,
+                            'message_id' => $row->message_id,
+                            'type' => $row->type ?? 'unknown',
+                            'payload' => $row->payload,
+                            'expense_id' => $row->expense_id ? ($this->expenseMap[$row->expense_id] ?? null) : null,
+                            'user_id' => $row->user_id ? ($this->userMap[$row->user_id] ?? null) : null,
+                            'organisation_id' => $row->organization_id ? ($this->orgMap[$row->organization_id] ?? null) : null,
+                            'status' => $row->status ?? 'received',
+                            'error_message' => $row->error_message,
+                            'created_at' => $row->created_at,
+                            'updated_at' => $row->updated_at,
+                        ],
+                    );
+                });
 
                 $webhook->wasRecentlyCreated ? $this->created++ : $this->updated++;
             }
