@@ -10,7 +10,9 @@
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
-            <flux:sidebar.nav>
+            <flux:separator class="border-emerald-500/10" />
+
+            <flux:sidebar.nav class="mt-2">
                 <flux:sidebar.group :heading="__('Overview')" class="grid">
                     <flux:sidebar.item icon="chart-bar-square" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
@@ -34,6 +36,8 @@
             </flux:sidebar.nav>
 
             <flux:spacer />
+
+            <flux:separator class="border-emerald-500/10" />
 
             <flux:sidebar.nav>
                 <flux:sidebar.item icon="cog-6-tooth" :href="route('profile.edit')" wire:navigate>
