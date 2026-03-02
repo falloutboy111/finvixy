@@ -16,6 +16,7 @@ class ExpenseCategory extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'legacy_uuid',
         'organisation_id',
         'name',
         'slug',

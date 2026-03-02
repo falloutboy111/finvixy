@@ -16,6 +16,7 @@ class Organisation extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'legacy_uuid',
         'name',
         'logo_path',
         'email',

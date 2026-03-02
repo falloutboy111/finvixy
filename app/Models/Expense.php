@@ -16,6 +16,7 @@ class Expense extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'legacy_uuid',
         'organisation_id',
         'user_id',
         'name',

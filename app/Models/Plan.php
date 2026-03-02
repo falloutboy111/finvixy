@@ -15,6 +15,7 @@ class Plan extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'legacy_uuid',
         'code',
         'name',
         'price_monthly',

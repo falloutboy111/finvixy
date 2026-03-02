@@ -9,7 +9,7 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('enable-email-2fa', 'pages::auth.enable-email-2fa')->name('email-2fa.enable');
 });
 
-Route::middleware(['auth', 'verified', 'email.otp'])->group(function () {
+Route::middleware(['auth', 'email.otp'])->group(function () {
     Route::livewire('dashboard', 'pages::dashboard')->name('dashboard');
     Route::livewire('expenses', 'pages::expenses.index')->name('expenses.index');
     Route::livewire('reports/spending', 'pages::reports.spending')->name('reports.spending');

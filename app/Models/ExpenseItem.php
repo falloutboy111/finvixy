@@ -15,6 +15,7 @@ class ExpenseItem extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'legacy_uuid',
         'expense_id',
         'name',
         'description',

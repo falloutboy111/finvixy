@@ -11,6 +11,7 @@ class WhatsappWebhook extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'legacy_uuid',
         'from',
         'message_id',
         'type',
