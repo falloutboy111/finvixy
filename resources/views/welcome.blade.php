@@ -19,7 +19,7 @@
                 <div class="flex h-16 items-center justify-between">
                     <a href="/" class="flex items-center gap-2.5">
                         <x-app-logo-icon class="size-8" />
-                        <span class="text-xl font-bold text-emerald-400 glow-text">Finvixy</span>
+                        <x-finvixy-wordmark variant="dark" size="lg" />
                     </a>
                     <nav class="flex items-center gap-4">
                         @auth
@@ -366,7 +366,7 @@
                 <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
                     <div class="flex items-center gap-2">
                         <x-app-logo-icon class="size-6" />
-                        <span class="text-sm font-semibold text-emerald-400">Finvixy</span>
+                        <x-finvixy-wordmark variant="dark" size="sm" />
                     </div>
                     <p class="text-xs text-gray-500">&copy; {{ date('Y') }} Finvixy. All rights reserved.</p>
                 </div>

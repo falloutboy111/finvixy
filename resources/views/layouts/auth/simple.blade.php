@@ -10,7 +10,7 @@
                     <span class="flex h-9 w-9 mb-1 items-center justify-center rounded-md">
                         <x-app-logo-icon class="size-9" />
                     </span>
-                    <span class="text-emerald-400 text-lg font-semibold glow-text">{{ config('app.name', 'Finvixy') }}</span>
+                    <x-finvixy-wordmark variant="dark" size="base" />
                 </a>
                 <div class="flex flex-col gap-6">
                     {{ $slot }}
