@@ -1,16 +1,17 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * No-op: all status values are now defined in the original create_expenses_table migration.
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE expenses MODIFY COLUMN status ENUM('pending', 'processing', 'processed', 'approved', 'rejected', 'failed') DEFAULT 'pending'");
+        //
     }
 
     /**
@@ -18,6 +19,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE expenses MODIFY COLUMN status ENUM('pending', 'approved', 'rejected', 'processed') DEFAULT 'pending'");
+        //
     }
 };

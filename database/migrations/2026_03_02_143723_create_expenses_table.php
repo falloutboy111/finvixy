@@ -27,7 +27,7 @@ return new class extends Migration
             $table->json('additional_fields')->nullable();
             $table->json('extracted_data')->nullable();
             $table->text('notes')->nullable();
-            $table->enum('status', ['pending', 'approved', 'rejected', 'processed'])->default('pending');
+            $table->enum('status', ['pending', 'processing', 'processed', 'approved', 'rejected', 'failed'])->default('pending');
             $table->boolean('is_duplicate')->default(false)->index();
             $table->foreignId('duplicate_of')->nullable()->constrained('expenses')->nullOnDelete();
             $table->timestamps();
