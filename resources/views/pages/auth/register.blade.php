@@ -41,6 +41,21 @@
                 placeholder="email@example.com"
             />
 
+            <!-- WhatsApp Number -->
+            <flux:field>
+                <flux:label>{{ __('WhatsApp number') }}</flux:label>
+                <flux:input
+                    name="whatsapp_number"
+                    :value="old('whatsapp_number')"
+                    type="tel"
+                    required
+                    autocomplete="tel"
+                    placeholder="+27 012 345 6789"
+                />
+                <flux:error name="whatsapp_number" />
+                <flux:text class="text-xs text-zinc-500">{{ __('We\'ll use this to receive your receipt photos via WhatsApp.') }}</flux:text>
+            </flux:field>
+
             <!-- Password -->
             <flux:input
                 name="password"

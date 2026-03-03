@@ -26,6 +26,10 @@ class CreateNewUser implements CreatesNewUsers
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
             'organisation_name' => ['required', 'string', 'max:255'],
+            'whatsapp_number' => ['required', 'string', 'regex:/^\+?[0-9\s\-]{7,20}$/'],
+        ], [
+            'whatsapp_number.required' => 'A WhatsApp number is required so you can scan receipts.',
+            'whatsapp_number.regex' => 'Please enter a valid phone number (e.g. +27 012 345 6789).',
         ])->validate();
 
         return DB::transaction(function () use ($input) {
@@ -43,6 +47,8 @@ class CreateNewUser implements CreatesNewUsers
                 'password' => $input['password'],
                 'organisation_id' => $organisation->id,
                 'plan_id' => $freePlan?->id,
+                'whatsapp_number' => preg_replace('/[^0-9+]/', '', $input['whatsapp_number']),
+                'whatsapp_enabled' => true,
             ]);
         });
     }
