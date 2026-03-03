@@ -52,11 +52,16 @@ class PurgeCustomer extends Command
             // Delete S3 receipt files
             if ($s3Files->isNotEmpty()) {
                 $this->info("Deleting {$s3Files->count()} files from S3...");
+                $deleted = 0;
                 foreach ($s3Files as $path) {
-                    if (Storage::disk('s3')->exists($path)) {
+                    try {
                         Storage::disk('s3')->delete($path);
+                        $deleted++;
+                    } catch (\Throwable $e) {
+                        $this->warn("  Skipped S3 file (not found or error): {$path}");
                     }
                 }
+                $this->info("  Deleted {$deleted}/{$s3Files->count()} S3 files.");
             }
 
             // Delete expense items (line items)
