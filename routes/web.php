@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::view('/privacy-policy', 'privacy')->name('privacy');
+Route::view('/terms-of-service', 'terms')->name('terms');
 
 Route::middleware(['auth'])->group(function () {
     Route::livewire('email-otp/challenge', 'pages::auth.email-otp-challenge')->name('email-otp.challenge');
@@ -17,4 +19,3 @@ Route::middleware(['auth', 'email.otp'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
-

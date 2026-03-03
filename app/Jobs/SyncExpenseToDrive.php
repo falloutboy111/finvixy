@@ -77,7 +77,11 @@ class SyncExpenseToDrive implements ShouldQueue
                 default => 'image/jpeg',
             };
 
-            $result = $driveService->uploadFile($filename, $fileContents, $mimeType, 'receipts');
+            // File into category subfolder (e.g. OrgName-finvixy/Travel/receipt.jpg)
+            $categoryFolder = $this->expense->category ?: 'Uncategorised';
+            $categoryFolder = ucfirst(str_replace(['-', '_'], ' ', $categoryFolder));
+
+            $result = $driveService->uploadFile($filename, $fileContents, $mimeType, $categoryFolder);
 
             $this->expense->update([
                 'drive_file_id' => $result['id'],

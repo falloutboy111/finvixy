@@ -8,6 +8,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::livewire('settings/profile', 'pages::settings.profile')->name('profile.edit');
     Route::livewire('settings/connected-accounts', 'pages::settings.connected-accounts')->name('connected-accounts.edit');
+    Route::livewire('settings/categories', 'pages::settings.categories')->name('categories.edit');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

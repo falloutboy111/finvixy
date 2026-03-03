@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SyncCategoryFoldersToDrive;
 use App\Models\ConnectedAccount;
 use App\Models\User;
 use App\Services\GoogleDriveService;
@@ -91,6 +92,11 @@ class GoogleCallbackController extends Controller
                 'user_id' => $user->id,
                 'email' => $email,
             ]);
+
+            // Sync category folders to the newly connected Drive
+            if ($user->organisation_id) {
+                SyncCategoryFoldersToDrive::dispatch($user->organisation_id, $user->id);
+            }
 
             return redirect()->route('connected-accounts.edit')
                 ->with('google-connected', true)

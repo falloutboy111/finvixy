@@ -131,7 +131,7 @@
                         </div>
                         <h3 class="text-lg font-semibold text-white mb-2">Google Drive Sync</h3>
                         <p class="text-sm text-gray-400 leading-relaxed">
-                            Every receipt automatically organised in your Google Drive. Share a folder with your accountant in one click.
+                            Receipts auto-sync to <strong class="text-gray-300">your own Google Drive</strong>, organised by category. Share a folder with your accountant in one click.
                         </p>
                     </div>
 
@@ -180,6 +180,66 @@
                         </div>
                         <h3 class="text-lg font-semibold text-white mb-2">Organise</h3>
                         <p class="text-gray-400">Everything lands in your dashboard and syncs to Google Drive — neatly filed by date and category.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {{-- Your Data, Your Control --}}
+        <section class="relative py-20 lg:py-32 border-t border-emerald-500/5">
+            <div class="absolute inset-0 overflow-hidden pointer-events-none">
+                <div class="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-3xl"></div>
+            </div>
+            <div class="relative mx-auto max-w-7xl px-6 lg:px-8">
+                <div class="grid gap-12 lg:grid-cols-2 items-center">
+                    <div>
+                        <div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-4 py-1.5 text-xs font-medium text-emerald-400 mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>
+                            Your data stays yours
+                        </div>
+                        <h2 class="text-3xl font-bold text-white sm:text-4xl">Your data. Your control.</h2>
+                        <p class="mt-4 text-lg text-gray-400 leading-relaxed">
+                            We don't store your receipts on our servers long-term. Everything syncs straight to <strong class="text-gray-300">your own Google Drive</strong> — organised by category, accessible from anywhere. We only help you organise your data automatically.
+                        </p>
+                        <ul class="mt-8 space-y-4">
+                            <li class="flex items-start gap-3">
+                                <svg class="size-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                <span class="text-gray-400"><strong class="text-gray-300">You own your storage</strong> — receipts live in your Google Drive, not ours</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <svg class="size-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                <span class="text-gray-400"><strong class="text-gray-300">Category folders</strong> — auto-organised by Travel, Food, Office, and more</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <svg class="size-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                <span class="text-gray-400"><strong class="text-gray-300">Limited permissions</strong> — we can only write to our own app folder, nothing else</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <svg class="size-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                <span class="text-gray-400"><strong class="text-gray-300">Share with your accountant</strong> — just share the Drive folder, done</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="flex items-center justify-center">
+                        <div class="relative w-full max-w-sm">
+                            <div class="glow-card rounded-2xl p-6 space-y-3">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="flex items-center justify-center size-10 rounded-xl bg-emerald-500/10">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">MyBusiness-finvixy</p>
+                                        <p class="text-[11px] text-zinc-500">Google Drive</p>
+                                    </div>
+                                </div>
+                                @foreach (['Travel', 'Food & Dining', 'Office Supplies', 'Transport', 'Utilities'] as $folder)
+                                    <div class="flex items-center gap-3 py-2 px-3 rounded-lg bg-white/[0.02]">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4 text-emerald-400/60" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg>
+                                        <span class="text-xs text-gray-400">{{ $folder }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -361,14 +421,18 @@
         </section>
 
         {{-- Footer --}}
-        <footer class="border-t border-emerald-500/10 py-8">
+        <footer class="border-t border-emerald-500/10 py-10">
             <div class="mx-auto max-w-7xl px-6 lg:px-8">
-                <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
+                <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
                     <div class="flex items-center gap-2">
                         <x-app-logo-icon class="size-6" />
                         <x-finvixy-wordmark variant="dark" size="sm" />
                     </div>
-                    <p class="text-xs text-gray-500">&copy; {{ date('Y') }} Finvixy. All rights reserved.</p>
+                    <nav class="flex items-center gap-6">
+                        <a href="{{ route('privacy') }}" class="text-xs text-gray-500 transition hover:text-emerald-400">Privacy Policy</a>
+                        <a href="{{ route('terms') }}" class="text-xs text-gray-500 transition hover:text-emerald-400">Terms of Service</a>
+                    </nav>
+                    <p class="text-xs text-gray-500">&copy; {{ date('Y') }} Finvixy by Enclivix (Pty) Ltd. All rights reserved.</p>
                 </div>
             </div>
         </footer>

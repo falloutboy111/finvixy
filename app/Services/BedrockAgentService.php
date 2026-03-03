@@ -41,7 +41,7 @@ class BedrockAgentService
     {
         $startTime = microtime(true);
 
-        $categories = implode(', ', ExpenseCategory::getFormattedForAi());
+        $categories = ExpenseCategory::getFormattedWithDescriptions($organisationId);
 
         $prompt = <<<PROMPT
         Read the receipt text below and respond with JSON containing: vendor_name, invoice_number, date (YYYY-MM-DD format), total_amount (numeric, no currency symbols), currency (3-letter ISO code), category (from the list below), tax_amount (numeric if present, null otherwise), and line_items (array of objects with item_name, quantity, unit_price, total_price).

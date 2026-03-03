@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ConnectedAccount;
 use App\Models\Expense;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -8,6 +9,27 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Component {
+    public bool $showDriveSetup = false;
+
+    public bool $dismissedDriveSetup = false;
+
+    public function mount(): void
+    {
+        $user = Auth::user();
+
+        $hasDrive = ConnectedAccount::query()
+            ->where('user_id', $user->id)
+            ->where('provider', 'google_drive')
+            ->where('is_active', true)
+            ->exists();
+
+        $this->showDriveSetup = ! $hasDrive;
+    }
+
+    public function dismissDriveSetup(): void
+    {
+        $this->dismissedDriveSetup = true;
+    }
     /**
      * @return array<string, mixed>
      */
@@ -150,6 +172,39 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
 } ?>
 
 <div>
+    {{-- Google Drive Setup Banner --}}
+    @if ($showDriveSetup && ! $dismissedDriveSetup)
+        <div class="mb-8 relative overflow-hidden rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-zinc-950 p-6 glow-md">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+            <div class="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-start gap-4">
+                    <span class="flex items-center justify-center size-12 rounded-xl bg-emerald-500/20 ring-1 ring-emerald-500/30 shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="size-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+                        </svg>
+                    </span>
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Connect Google Drive to back up your receipts</h3>
+                        <p class="text-sm text-zinc-400 mt-1 max-w-lg">
+                            Your receipts will sync automatically to your own Google Drive, organised by category. You own the data — we just help organise it.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 shrink-0">
+                    <button wire:click="dismissDriveSetup" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+                        Later
+                    </button>
+                    <a href="{{ route('connected-accounts.edit') }}" wire:navigate class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400 glow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                        </svg>
+                        Connect Google Drive
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Greeting --}}
     <div class="mb-8">
         <flux:heading size="xl" level="1">
@@ -343,7 +398,19 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
     @if ($this->stats['all_time_count'] === 0)
         <div class="mt-8 glow-card rounded-2xl p-6">
             <flux:heading size="lg" class="mb-4">Get Started</flux:heading>
-            <div class="grid gap-4 sm:grid-cols-3">
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                @if ($showDriveSetup)
+                    <a href="{{ route('connected-accounts.edit') }}" wire:navigate class="group flex items-center gap-4 p-4 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-500/30 transition-all">
+                        <span class="flex items-center justify-center size-11 rounded-xl bg-emerald-500/20 group-hover:bg-emerald-500/30 transition-colors">
+                            <flux:icon name="cloud-arrow-up" class="size-5 text-emerald-400" />
+                        </span>
+                        <div>
+                            <p class="text-sm font-semibold text-white">Connect Drive</p>
+                            <p class="text-xs text-emerald-400/80">Recommended first step</p>
+                        </div>
+                    </a>
+                @endif
+
                 <a href="{{ route('expenses.index') }}" wire:navigate class="group flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-zinc-800 hover:border-emerald-500/20 transition-all">
                     <span class="flex items-center justify-center size-11 rounded-xl bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
                         <flux:icon name="camera" class="size-5 text-emerald-400" />

@@ -54,14 +54,46 @@ class ExpenseCategory extends Model
     }
 
     /**
-     * Get formatted category slugs for AI prompts.
+     * Get category slugs for AI prompts, scoped to an organisation.
+     * Falls back to default categories if none exist for the organisation.
      *
      * @return list<string>
      */
-    public static function getFormattedForAi(): array
+    public static function getFormattedForAi(?int $organisationId = null): array
     {
+        if ($organisationId) {
+            $categories = self::where('organisation_id', $organisationId)
+                ->orderBy('sort_order')
+                ->pluck('slug')
+                ->toArray();
+
+            if (! empty($categories)) {
+                return $categories;
+            }
+        }
+
         return collect(Organisation::$defaultCategories)
             ->pluck('slug')
             ->toArray();
+    }
+
+    /**
+     * Get category slugs with descriptions for richer AI context.
+     */
+    public static function getFormattedWithDescriptions(?int $organisationId = null): string
+    {
+        if ($organisationId) {
+            $categories = self::where('organisation_id', $organisationId)
+                ->orderBy('sort_order')
+                ->get(['slug', 'description']);
+
+            if ($categories->isNotEmpty()) {
+                return $categories->map(fn ($c) => "{$c->slug}".($c->description ? " ({$c->description})" : ''))->implode(', ');
+            }
+        }
+
+        return collect(Organisation::$defaultCategories)
+            ->map(fn ($c) => "{$c['slug']}".($c['description'] ? " ({$c['description']})" : ''))
+            ->implode(', ');
     }
 }

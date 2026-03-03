@@ -430,9 +430,11 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                             <div class="min-w-0">
                                 <p class="text-sm font-semibold text-white truncate">{{ $expense->name }}</p>
                                 <p class="text-xs text-zinc-500 mt-0.5">
-                                    {{ $expense->date->format('d M Y') }}
-                                    <span class="text-zinc-600">&middot;</span>
-                                    <span class="text-zinc-600">Uploaded {{ $expense->created_at->diffForHumans() }}</span>
+                                    @if ($expense->date)
+                                        {{ $expense->date->format('d M Y') }}
+                                        <span class="text-zinc-600">&middot;</span>
+                                    @endif
+                                    <span class="text-zinc-600">Uploaded {{ $expense->created_at?->diffForHumans() ?? 'N/A' }}</span>
                                 </p>
                             </div>
                             <div class="text-right shrink-0">
