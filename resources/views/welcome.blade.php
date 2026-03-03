@@ -4,8 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Finvixy — Scan. Track. Save.</title>
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        <link rel="icon" href="/logoFinvixy.png" type="image/png">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
@@ -18,7 +17,7 @@
             <div class="mx-auto max-w-7xl px-6 lg:px-8">
                 <div class="flex h-16 items-center justify-between">
                     <a href="/" class="flex items-center gap-2.5">
-                        <x-app-logo-icon class="size-8" />
+                        <x-app-logo-icon class="h-16 w-auto" />
                         <x-finvixy-wordmark variant="dark" size="lg" />
                     </a>
                     <nav class="flex items-center gap-4">
@@ -425,7 +424,7 @@
             <div class="mx-auto max-w-7xl px-6 lg:px-8">
                 <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
                     <div class="flex items-center gap-2">
-                        <x-app-logo-icon class="size-6" />
+                        <x-app-logo-icon class="h-8 w-auto" />
                         <x-finvixy-wordmark variant="dark" size="sm" />
                     </div>
                     <nav class="flex items-center gap-6">

@@ -7,8 +7,8 @@
         <div class="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
             <div class="flex w-full max-w-sm flex-col gap-2">
                 <a href="{{ route('home') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
-                    <span class="flex h-9 w-9 mb-1 items-center justify-center rounded-md">
-                        <x-app-logo-icon class="size-9" />
+                    <span class="flex h-48 w-auto mb-1 items-center justify-center rounded-md">
+                        <x-app-logo-icon class="h-48 w-auto" />
                     </span>
                     <x-finvixy-wordmark variant="dark" size="base" />
                 </a>
