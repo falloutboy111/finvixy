@@ -55,6 +55,9 @@ class ProcessExpenseImage implements ShouldQueue
                 ),
             ]);
 
+            // Notify via WhatsApp if applicable
+            SendWhatsAppExpenseResult::dispatch($this->expense->fresh());
+
             throw $e;
         }
     }
@@ -191,6 +194,9 @@ class ProcessExpenseImage implements ShouldQueue
 
         // Auto-sync to Google Drive if connected
         SyncExpenseToDrive::dispatch($this->expense);
+
+        // Notify via WhatsApp if the receipt came from WhatsApp
+        SendWhatsAppExpenseResult::dispatch($this->expense->fresh());
 
         Log::info('Expense processed successfully', [
             'expense_id' => $this->expense->id,

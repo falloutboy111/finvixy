@@ -17,3 +17,9 @@ Route::middleware(['auth', 'email.otp'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+// WhatsApp Business API Webhook (no auth, CSRF-exempt)
+Route::prefix('webhook/whatsapp')->group(function () {
+    Route::get('/', [\App\Http\Controllers\WhatsAppWebhookController::class, 'verify']);
+    Route::post('/', [\App\Http\Controllers\WhatsAppWebhookController::class, 'handle']);
+});

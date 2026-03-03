@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'email.otp' => EnsureEmailOtpVerified::class,
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'webhook/whatsapp',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

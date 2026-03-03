@@ -54,4 +54,22 @@ return [
         'redirect_uri' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | WhatsApp Business API
+    |--------------------------------------------------------------------------
+    |
+    | Credentials for the Meta WhatsApp Business API (Cloud API).
+    | Receipts sent via WhatsApp are downloaded, stored in S3, then
+    | processed through Textract + Bedrock the same as web uploads.
+    |
+    */
+
+    'whatsapp' => [
+        'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
+        'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
+    ],
+
 ];
