@@ -1,10 +1,13 @@
 <?php
 
 use App\Jobs\ProcessExpenseImage;
+use App\Mail\QuotaIncreaseRequest;
 use App\Models\Expense;
 use App\Services\PlanLimitService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -27,7 +30,7 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
     public string $category = '';
 
     #[Url]
-    public string $sortBy = 'date';
+    public string $sortBy = 'created_at';
 
     #[Url]
     public string $sortDir = 'desc';
@@ -43,6 +46,53 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
     public array $receipts = [];
 
     public bool $uploading = false;
+
+    public bool $quotaRequested = false;
+
+    /**
+     * Get current plan limit info for the logged-in user.
+     *
+     * @return array{allowed: bool, used: int, limit: int|string, remaining: int|string}
+     */
+    #[Computed]
+    public function planLimit(): array
+    {
+        return app(PlanLimitService::class)->checkReceiptLimit(Auth::user(), 0);
+    }
+
+    /**
+     * Check if the user has hit their plan limit.
+     */
+    #[Computed]
+    public function isAtLimit(): bool
+    {
+        $limit = $this->planLimit;
+
+        if ($limit['limit'] === 'unlimited' || $limit['limit'] === 0) {
+            return false;
+        }
+
+        return $limit['used'] >= $limit['limit'];
+    }
+
+    /**
+     * Send a quota increase request email to admin.
+     */
+    public function requestQuotaIncrease(): void
+    {
+        $user = Auth::user();
+        $limit = $this->planLimit;
+
+        Mail::to('keegan@enclivix.com')->send(
+            new QuotaIncreaseRequest(
+                user: $user,
+                currentLimit: (int) $limit['limit'],
+                currentUsage: (int) $limit['used'],
+            )
+        );
+
+        $this->quotaRequested = true;
+    }
 
     public function updatedSearch(): void
     {
@@ -294,11 +344,40 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
         </flux:select>
     </div>
 
+    {{-- Plan limit banner --}}
+    @if ($this->isAtLimit)
+        <div class="mb-4 rounded-xl bg-amber-500/10 ring-1 ring-amber-500/20 px-4 py-3">
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <flux:icon name="exclamation-triangle" class="size-5 text-amber-400 shrink-0" />
+                    <div>
+                        <p class="text-sm font-medium text-amber-300">Monthly receipt limit reached ({{ $this->planLimit['used'] }}/{{ $this->planLimit['limit'] }})</p>
+                        <p class="text-xs text-amber-400/70 mt-0.5">Upgrade your plan to continue scanning receipts.</p>
+                    </div>
+                </div>
+                @if ($quotaRequested)
+                    <flux:badge color="green" size="sm">Request sent</flux:badge>
+                @else
+                    <flux:button variant="primary" size="sm" wire:click="requestQuotaIncrease" wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="requestQuotaIncrease">Increase Quota</span>
+                        <span wire:loading wire:target="requestQuotaIncrease">Sending...</span>
+                    </flux:button>
+                @endif
+            </div>
+        </div>
+    @endif
+
     {{-- Sort bar --}}
     <div class="flex items-center gap-2 mb-4">
         <flux:text class="text-xs text-zinc-500">Sort by:</flux:text>
+        <button wire:click="sort('created_at')" class="text-xs px-2 py-1 rounded-md transition-colors {{ $sortBy === 'created_at' ? 'text-emerald-400 bg-emerald-500/10' : 'text-zinc-400 hover:text-white' }}">
+            Uploaded
+            @if ($sortBy === 'created_at')
+                <flux:icon :name="$sortDir === 'asc' ? 'chevron-up' : 'chevron-down'" variant="micro" class="inline size-3" />
+            @endif
+        </button>
         <button wire:click="sort('date')" class="text-xs px-2 py-1 rounded-md transition-colors {{ $sortBy === 'date' ? 'text-emerald-400 bg-emerald-500/10' : 'text-zinc-400 hover:text-white' }}">
-            Date
+            Receipt Date
             @if ($sortBy === 'date')
                 <flux:icon :name="$sortDir === 'asc' ? 'chevron-up' : 'chevron-down'" variant="micro" class="inline size-3" />
             @endif
@@ -350,7 +429,11 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                         <div class="flex items-start justify-between gap-2">
                             <div class="min-w-0">
                                 <p class="text-sm font-semibold text-white truncate">{{ $expense->name }}</p>
-                                <p class="text-xs text-zinc-500 mt-0.5">{{ $expense->date->format('d M Y') }}</p>
+                                <p class="text-xs text-zinc-500 mt-0.5">
+                                    {{ $expense->date->format('d M Y') }}
+                                    <span class="text-zinc-600">&middot;</span>
+                                    <span class="text-zinc-600">Uploaded {{ $expense->created_at->diffForHumans() }}</span>
+                                </p>
                             </div>
                             <div class="text-right shrink-0">
                                 <p class="text-sm font-bold text-white">R{{ number_format($expense->amount, 2) }}</p>

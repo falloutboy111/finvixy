@@ -72,6 +72,12 @@ class ProcessExpenseImage implements ShouldQueue
 
         $ocrText = $textractService->detectText($fileContents);
 
+        Log::info('Textract OCR output', [
+            'expense_id' => $this->expense->id,
+            'text_length' => strlen($ocrText),
+            'ocr_text' => $ocrText,
+        ]);
+
         $this->parseAndUpdateExpense($ocrText, $bedrockService);
     }
 
@@ -96,6 +102,12 @@ class ProcessExpenseImage implements ShouldQueue
             $result = $textractService->getAsyncResult($jobId);
 
             if ($result['status'] === 'SUCCEEDED') {
+                Log::info('Textract PDF OCR output', [
+                    'expense_id' => $this->expense->id,
+                    'text_length' => strlen($result['text'] ?? ''),
+                    'ocr_text' => $result['text'] ?? '',
+                ]);
+
                 $this->parseAndUpdateExpense($result['text'] ?? '', $bedrockService);
 
                 return;
@@ -129,6 +141,11 @@ class ProcessExpenseImage implements ShouldQueue
         }
 
         $parsed = $bedrockService->parseExpenseDocument($ocrText, $this->expense->organisation_id, $this->expense->user_id);
+
+        Log::info('Bedrock AI parsed response', [
+            'expense_id' => $this->expense->id,
+            'parsed_data' => $parsed,
+        ]);
 
         // Update the expense with extracted data
         $updateData = [

@@ -19,6 +19,17 @@
                 :placeholder="__('Full name')"
             />
 
+            <!-- Organisation / Business Name -->
+            <flux:input
+                name="organisation_name"
+                :label="__('Organisation / Business name')"
+                :value="old('organisation_name')"
+                type="text"
+                required
+                autocomplete="organization"
+                :placeholder="__('Your company or business name')"
+            />
+
             <!-- Email Address -->
             <flux:input
                 name="email"
