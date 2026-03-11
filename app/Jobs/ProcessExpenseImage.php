@@ -2,14 +2,19 @@
 
 namespace App\Jobs;
 
+use App\Mail\QuotaExceededMail;
 use App\Models\Expense;
 use App\Models\ExpenseItem;
 use App\Services\BedrockAgentService;
+use App\Services\BudgetService;
+use App\Services\PlanLimitService;
 use App\Services\TextractService;
+use App\Services\WhatsAppService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class ProcessExpenseImage implements ShouldQueue
@@ -192,6 +197,12 @@ class ProcessExpenseImage implements ShouldQueue
         // Run duplicate detection
         $this->detectDuplicate($parsed);
 
+        // Check budget limits and send alerts if exceeded
+        $this->checkBudgetAndAlert();
+
+        // Check receipt quota and send notification if exceeded
+        $this->checkQuotaAndNotify();
+
         // Auto-sync to Google Drive if connected
         SyncExpenseToDrive::dispatch($this->expense);
 
@@ -276,6 +287,124 @@ class ProcessExpenseImage implements ShouldQueue
                     'duplicate_of' => $vendorDupe->id,
                 ]);
             }
+        }
+    }
+
+    /**
+     * Check budget and send WhatsApp alert if exceeded.
+     */
+    protected function checkBudgetAndAlert(): void
+    {
+        if (! $this->expense->organisation_id || ! $this->expense->user_id) {
+            return;
+        }
+
+        $budgetService = app(BudgetService::class);
+        $alert = $budgetService->checkExpenseBudget($this->expense);
+
+        if ($alert && $alert['exceeded']) {
+            $user = $this->expense->user;
+            if ($user && $user->whatsapp_number && $user->whatsapp_enabled) {
+                $this->sendBudgetAlert($user, $alert);
+            }
+        }
+    }
+
+    /**
+     * Send budget alert via WhatsApp.
+     */
+    protected function sendBudgetAlert($user, array $alert): void
+    {
+        $message = sprintf(
+            "⚠️ Budget Alert!\n" .
+            "Your %s - %s budget exceeded.\n\n" .
+            "Budget: R%.2f/month\n" .
+            "Used: R%.2f (+R%.2f over)\n" .
+            "This receipt: R%.2f",
+            $alert['vendor_name'],
+            $alert['category'] ?? 'General',
+            $alert['budget_limit'],
+            $alert['current_month_spent'],
+            $alert['overage'],
+            $alert['expense_amount']
+        );
+
+        try {
+            app(WhatsAppService::class)->sendMessage($user->whatsapp_number, $message);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send budget alert via WhatsApp', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Check quota and send notification if exceeded.
+     */
+    protected function checkQuotaAndNotify(): void
+    {
+        if (! $this->expense->user_id) {
+            return;
+        }
+
+        $user = $this->expense->user;
+        if (! $user) {
+            return;
+        }
+
+        $limitService = app(PlanLimitService::class);
+        $limit = $limitService->checkReceiptLimit($user, 0); // Don't count this one again
+
+        // Only send alert if user is now at 100% of quota
+        if ($limit['allowed'] === false && is_numeric($limit['limit'])) {
+            // Send email
+            try {
+                Mail::to($user->email)->send(new QuotaExceededMail(
+                    $user,
+                    $limit['used'],
+                    $limit['limit'],
+                    $user->organisation
+                ));
+
+                Log::info('Quota exceeded email sent', [
+                    'user_id' => $user->id,
+                    'used' => $limit['used'],
+                    'limit' => $limit['limit'],
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send quota exceeded email', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            // Send WhatsApp alert (optional)
+            if ($user->whatsapp_enabled && $user->whatsapp_number) {
+                $this->sendQuotaAlert($user, $limit);
+            }
+        }
+    }
+
+    /**
+     * Send quota exceeded alert via WhatsApp.
+     */
+    protected function sendQuotaAlert($user, array $limit): void
+    {
+        $message = sprintf(
+            "⚠️ Monthly receipt limit reached (%d/%d).\n" .
+            "Upgrade: " . config('app.url') . "/settings/billing",
+            $limit['used'],
+            $limit['limit']
+        );
+
+        try {
+            app(WhatsAppService::class)->sendMessage($user->whatsapp_number, $message);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send quota alert via WhatsApp', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }
