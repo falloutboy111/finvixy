@@ -317,9 +317,15 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
                         @php $height = max(($bar['amount'] / $maxAmount) * 100, 6); @endphp
                         <div class="flex-1 flex flex-col items-center gap-2" wire:key="bar-{{ $loop->index }}">
                             <span class="text-[11px] font-medium text-zinc-400">R{{ number_format($bar['amount'], 0) }}</span>
-                            <div class="w-full h-44 flex items-end">
-                                <div class="w-full rounded-lg bg-gradient-to-t from-emerald-600 to-emerald-400 transition-all duration-500"
+                            <div class="w-full h-44 flex items-end group relative">
+                                <div class="w-full rounded-lg bg-gradient-to-t from-emerald-600 to-emerald-400 transition-all duration-500 hover:shadow-lg hover:shadow-emerald-500/30 cursor-pointer"
                                      style="height: {{ $height }}%"></div>
+                                <div class="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                                    <div class="bg-zinc-950 border border-emerald-500/30 rounded-lg px-2.5 py-1.5 shadow-lg">
+                                        <p class="text-[11px] font-semibold text-white">{{ $bar['label'] }}</p>
+                                        <p class="text-[10px] text-emerald-400">R{{ number_format($bar['amount'], 2) }}</p>
+                                    </div>
+                                </div>
                             </div>
                             <span class="text-[11px] text-zinc-500">{{ $bar['label'] }}</span>
                         </div>
