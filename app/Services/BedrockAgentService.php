@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AiUsageLog;
 use App\Models\ExpenseCategory;
 use Aws\BedrockAgentRuntime\BedrockAgentRuntimeClient;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class BedrockAgentService
@@ -171,6 +172,49 @@ class BedrockAgentService
     }
 
     /**
+     * Validate and fix date extracted from receipt.
+     * Converts future dates to today, logs old dates, defaults to today for invalid dates.
+     */
+    protected function validateAndFixDate(?string $extractedDate): ?string
+    {
+        if (empty($extractedDate)) {
+            return today()->toDateString();
+        }
+
+        try {
+            $date = Carbon::parse($extractedDate);
+            $today = Carbon::today();
+
+            // If future date → use today
+            if ($date->isFuture()) {
+                Log::warning('Future date in receipt, using today', [
+                    'extracted' => $extractedDate,
+                    'using' => $today->toDateString(),
+                ]);
+
+                return $today->toDateString();
+            }
+
+            // If very old (>365 days) → log warning but allow
+            if ($date->diffInDays($today) > 365) {
+                Log::warning('Very old receipt date', [
+                    'extracted' => $extractedDate,
+                    'days_old' => $date->diffInDays($today),
+                ]);
+            }
+
+            return $date->toDateString();
+        } catch (\Throwable $e) {
+            Log::warning('Failed to parse date, using today', [
+                'extracted' => $extractedDate,
+                'error' => $e->getMessage(),
+            ]);
+
+            return now()->toDateString();
+        }
+    }
+
+    /**
      * Extract JSON from the agent response (handles markdown wrapping, etc).
      *
      * @return array<string, mixed>
@@ -200,7 +244,7 @@ class BedrockAgentService
         return [
             'vendor_name' => $decoded['vendor_name'] ?? 'Unknown Vendor',
             'invoice_number' => $decoded['invoice_number'] ?? null,
-            'date' => $decoded['date'] ?? null,
+            'date' => $this->validateAndFixDate($decoded['date'] ?? null),
             'total_amount' => (float) ($decoded['total_amount'] ?? 0),
             'currency' => $decoded['currency'] ?? 'ZAR',
             'category' => $decoded['category'] ?? null,
