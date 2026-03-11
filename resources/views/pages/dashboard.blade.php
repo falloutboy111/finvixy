@@ -351,9 +351,12 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
 
         {{-- Recent Receipts --}}
         <div class="lg:col-span-2 glow-card rounded-2xl p-6">
-            <div class="flex items-center justify-between mb-5">
-                <flux:heading size="lg">Recent Receipts</flux:heading>
-                <a href="{{ route('expenses.index') }}" wire:navigate class="text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors">View all</a>
+            <div class="flex items-center justify-between mb-5 pb-4 border-b border-zinc-800">
+                <div>
+                    <flux:heading size="lg">Recent Receipts</flux:heading>
+                    <flux:text class="text-xs text-zinc-500 mt-0.5">{{ $this->recentExpenses->count() }} of {{ $this->stats['month_count'] }} this month</flux:text>
+                </div>
+                <flux:button icon="arrow-right" href="{{ route('expenses.index') }}" wire:navigate size="sm" variant="ghost">View All</flux:button>
             </div>
 
             <div class="space-y-1">
