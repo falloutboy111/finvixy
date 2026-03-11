@@ -9,7 +9,15 @@ use Illuminate\Support\Facades\Log;
 
 class BedrockAgentService
 {
+    use RetryableLaravelService;
+
     protected BedrockAgentRuntimeClient $client;
+
+    // Constants for limits and timeouts
+    private const TIMEOUT_SECONDS = 60;
+    private const MAX_RETRIES = 3;
+    private const MAX_TOKEN_USAGE = 4000; // Safety limit for a single request
+    private const RATE_LIMIT_DELAY_MS = 500; // Delay between requests
 
     public function __construct()
     {
@@ -20,11 +28,18 @@ class BedrockAgentService
                 'key' => config('services.aws.key'),
                 'secret' => config('services.aws.secret'),
             ],
+            'http' => [
+                'timeout' => self::TIMEOUT_SECONDS,
+                'connect_timeout' => self::TIMEOUT_SECONDS,
+            ],
         ]);
+
+        // Set max retries for this service
+        $this->maxRetries = self::MAX_RETRIES;
     }
 
     /**
-     * Parse receipt text using Bedrock Agent and return structured data.
+     * Parse receipt text using Bedrock Agent and return structured data (with retry logic).
      *
      * @return array{
      *     vendor_name: string,
@@ -41,6 +56,75 @@ class BedrockAgentService
     {
         $startTime = microtime(true);
 
+        // Validate input
+        $this->validateReceiptInput($receiptText);
+
+        try {
+            $response = $this->executeWithRetry(
+                fn() => $this->performParsing($receiptText, $organisationId),
+                'Bedrock.parseExpenseDocument'
+            );
+
+            $parsed = $this->parseResponse($response);
+
+            $this->logUsage($startTime, $receiptText, $response, $organisationId, $userId);
+
+            return $parsed;
+        } catch (\Throwable $e) {
+            Log::error('Bedrock expense parsing failed', [
+                'error' => $e->getMessage(),
+                'organisation_id' => $organisationId,
+                'error_code' => $e->getCode(),
+            ]);
+
+            // Log failed parsing attempt for monitoring
+            AiUsageLog::create([
+                'organisation_id' => $organisationId,
+                'user_id' => $userId,
+                'service_type' => 'bedrock_agent',
+                'model_name' => 'expense_parser',
+                'success' => false,
+                'error_message' => substr($e->getMessage(), 0, 500),
+                'request_summary' => 'Expense receipt parsing (FAILED)',
+            ]);
+
+            return $this->fallbackResponse();
+        }
+    }
+
+    /**
+     * Validate receipt input before sending to Bedrock.
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function validateReceiptInput(string $receiptText): void
+    {
+        if (empty(trim($receiptText))) {
+            throw new \InvalidArgumentException('Receipt text cannot be empty');
+        }
+
+        if (strlen($receiptText) < 10) {
+            throw new \InvalidArgumentException('Receipt text is too short');
+        }
+
+        // Token estimate (roughly 4 chars = 1 token)
+        $estimatedTokens = (int) ceil(strlen($receiptText) / 4);
+
+        if ($estimatedTokens > self::MAX_TOKEN_USAGE) {
+            throw new \InvalidArgumentException(
+                "Receipt text exceeds token limit. Estimated: $estimatedTokens, Max: " . self::MAX_TOKEN_USAGE
+            );
+        }
+    }
+
+    /**
+     * Perform the actual parsing (called by retry wrapper).
+     */
+    protected function performParsing(string $receiptText, int $organisationId): string
+    {
+        // Rate limiting - prevent hammering Bedrock
+        usleep(self::RATE_LIMIT_DELAY_MS * 1000);
+
         $categories = ExpenseCategory::getFormattedWithDescriptions($organisationId);
 
         $prompt = <<<PROMPT
@@ -54,22 +138,7 @@ class BedrockAgentService
         Respond ONLY with valid JSON. No explanation or markdown.
         PROMPT;
 
-        try {
-            $response = $this->invokeAgent($prompt);
-
-            $parsed = $this->parseResponse($response);
-
-            $this->logUsage($startTime, $receiptText, $response, $organisationId, $userId);
-
-            return $parsed;
-        } catch (\Throwable $e) {
-            Log::error('Bedrock expense parsing failed', [
-                'error' => $e->getMessage(),
-                'organisation_id' => $organisationId,
-            ]);
-
-            return $this->fallbackResponse();
-        }
+        return $this->invokeAgent($prompt);
     }
 
     /**
