@@ -207,10 +207,18 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
 
     {{-- Greeting --}}
     <div class="mb-8">
-        <flux:heading size="xl" level="1">
-            Good {{ now()->hour < 12 ? 'morning' : (now()->hour < 17 ? 'afternoon' : 'evening') }}, {{ explode(' ', auth()->user()->name)[0] }}
-        </flux:heading>
-        <flux:text class="mt-1">{{ now()->format('l, j F Y') }} &mdash; here&rsquo;s your expense overview.</flux:text>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <flux:heading size="xl" level="1">
+                    Good {{ now()->hour < 12 ? 'morning' : (now()->hour < 17 ? 'afternoon' : 'evening') }}, {{ explode(' ', auth()->user()->name)[0] }}
+                </flux:heading>
+                <flux:text class="mt-1">{{ now()->format('l, j F Y') }} &mdash; here&rsquo;s your expense overview.</flux:text>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+                <flux:button icon="arrow-down-tray" href="{{ route('reports.spending') }}" wire:navigate variant="ghost">Export Report</flux:button>
+                <flux:button icon="plus" href="{{ route('expenses.index') }}" wire:navigate>Add Expense</flux:button>
+            </div>
+        </div>
     </div>
 
     {{-- Stats Cards --}}
