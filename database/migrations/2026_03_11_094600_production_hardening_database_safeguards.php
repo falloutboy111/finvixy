@@ -148,14 +148,24 @@ return new class extends Migration
 
         // Drop new columns
         Schema::table('expenses', function (Blueprint $table) {
-            $table->dropSoftDeletesIfExists();
-            $table->dropColumnIfExists('last_ocr_confidence');
-            $table->dropColumnIfExists('processing_attempts');
-            $table->dropColumnIfExists('last_processed_at');
+            if (Schema::hasColumn('expenses', 'deleted_at')) {
+                $table->dropColumn('deleted_at');
+            }
+            if (Schema::hasColumn('expenses', 'last_ocr_confidence')) {
+                $table->dropColumn('last_ocr_confidence');
+            }
+            if (Schema::hasColumn('expenses', 'processing_attempts')) {
+                $table->dropColumn('processing_attempts');
+            }
+            if (Schema::hasColumn('expenses', 'last_processed_at')) {
+                $table->dropColumn('last_processed_at');
+            }
         });
 
         Schema::table('expense_items', function (Blueprint $table) {
-            $table->dropSoftDeletesIfExists();
+            if (Schema::hasColumn('expense_items', 'deleted_at')) {
+                $table->dropColumn('deleted_at');
+            }
         });
     }
 };
