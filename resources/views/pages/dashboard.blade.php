@@ -222,17 +222,20 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
     </div>
 
     {{-- Stats Cards --}}
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-8">
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-8 auto-rows-max">
         {{-- This Month --}}
-        <div class="glow-card rounded-2xl p-5">
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-sm font-medium text-zinc-400">This Month</span>
+        <div class="glow-card rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-zinc-500 uppercase tracking-wider">This Month</span>
                 <span class="flex items-center justify-center size-10 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
                     <flux:icon name="banknotes" class="size-5 text-emerald-400" />
                 </span>
             </div>
-            <p class="text-3xl font-bold text-white tracking-tight">R{{ $this->stats['month_total'] }}</p>
-            <div class="flex items-center gap-2 mt-2">
+            <div>
+                <p class="text-3xl font-bold text-white tracking-tight">R{{ $this->stats['month_total'] }}</p>
+                <p class="text-xs text-zinc-500">{{ $this->stats['month_count'] }} receipts</p>
+            </div>
+            <div class="flex items-center gap-2">
                 @if ($this->stats['growth_percent'] > 0)
                     <span class="inline-flex items-center gap-0.5 text-xs font-medium text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">
                         <flux:icon name="arrow-trending-up" variant="micro" class="size-3" />
@@ -251,39 +254,45 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
         </div>
 
         {{-- Receipts Scanned --}}
-        <div class="glow-card rounded-2xl p-5">
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-sm font-medium text-zinc-400">Receipts Scanned</span>
+        <div class="glow-card rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Receipts Scanned</span>
                 <span class="flex items-center justify-center size-10 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
                     <flux:icon name="document-text" class="size-5 text-emerald-400" />
                 </span>
             </div>
-            <p class="text-3xl font-bold text-white tracking-tight">{{ $this->stats['month_count'] }}</p>
-            <p class="text-xs text-zinc-500 mt-2">{{ $this->stats['all_time_count'] }} all time</p>
+            <div>
+                <p class="text-3xl font-bold text-white tracking-tight">{{ $this->stats['month_count'] }}</p>
+                <p class="text-xs text-zinc-500">{{ $this->stats['all_time_count'] }} all time</p>
+            </div>
         </div>
 
         {{-- Pending Review --}}
-        <div class="glow-card rounded-2xl p-5">
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-sm font-medium text-zinc-400">Pending Review</span>
+        <div class="glow-card rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Pending Review</span>
                 <span class="flex items-center justify-center size-10 rounded-xl bg-amber-500/10 ring-1 ring-amber-500/20">
                     <flux:icon name="clock" class="size-5 text-amber-400" />
                 </span>
             </div>
-            <p class="text-3xl font-bold text-white tracking-tight">{{ $this->stats['pending_count'] }}</p>
-            <p class="text-xs text-zinc-500 mt-2">Awaiting processing</p>
+            <div>
+                <p class="text-3xl font-bold text-white tracking-tight">{{ $this->stats['pending_count'] }}</p>
+                <p class="text-xs text-zinc-500">Awaiting processing</p>
+            </div>
         </div>
 
         {{-- Top Category --}}
-        <div class="glow-card rounded-2xl p-5">
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-sm font-medium text-zinc-400">Top Category</span>
+        <div class="glow-card rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Top Category</span>
                 <span class="flex items-center justify-center size-10 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
                     <flux:icon name="chart-pie" class="size-5 text-emerald-400" />
                 </span>
             </div>
-            <p class="text-xl font-bold text-white capitalize truncate">{{ str_replace('-', ' ', $this->stats['top_category']) }}</p>
-            <p class="text-xs text-zinc-500 mt-2">R{{ $this->stats['top_category_amount'] }} this month</p>
+            <div>
+                <p class="text-xl font-bold text-white capitalize truncate">{{ str_replace('-', ' ', $this->stats['top_category']) }}</p>
+                <p class="text-xs text-zinc-500">R{{ $this->stats['top_category_amount'] }} this month</p>
+            </div>
         </div>
     </div>
 
