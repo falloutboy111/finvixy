@@ -374,14 +374,16 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
                         <div class="text-right shrink-0 ml-3">
                             <p class="text-sm font-semibold text-white">R{{ number_format($expense->amount, 2) }}</p>
                             @php
-                                $statusColors = match($expense->status) {
-                                    'processed' => 'text-emerald-400 bg-emerald-500/10',
-                                    'pending' => 'text-amber-400 bg-amber-500/10',
-                                    'rejected' => 'text-red-400 bg-red-500/10',
-                                    default => 'text-zinc-400 bg-zinc-500/10',
+                                $badgeColor = match($expense->status) {
+                                    'processed' => 'success',
+                                    'pending' => 'warning',
+                                    'rejected' => 'danger',
+                                    default => 'info',
                                 };
                             @endphp
-                            <span class="inline-block text-[10px] font-medium {{ $statusColors }} px-1.5 py-0.5 rounded mt-0.5">{{ ucfirst($expense->status) }}</span>
+                            <div class="mt-0.5">
+                                <flux:badge :color="$badgeColor" size="sm">{{ ucfirst($expense->status) }}</flux:badge>
+                            </div>
                         </div>
                     </div>
                 @empty
