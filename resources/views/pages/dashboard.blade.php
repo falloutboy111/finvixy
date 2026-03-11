@@ -422,10 +422,9 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
         </div>
     </div>
 
-    {{-- Quick Actions (show when empty to guide new users) --}}
-    @if ($this->stats['all_time_count'] === 0)
-        <div class="mt-8 glow-card rounded-2xl p-6">
-            <flux:heading size="lg" class="mb-4">Get Started</flux:heading>
+    {{-- Quick Actions --}}
+    <div class="mt-8 {{ $this->stats['all_time_count'] === 0 ? 'glow-card rounded-2xl p-6' : 'rounded-2xl p-6 bg-white/[0.02] border border-zinc-800/50' }}">
+        <flux:heading size="lg" class="mb-4">{{ $this->stats['all_time_count'] === 0 ? 'Get Started' : 'Quick Actions' }}</flux:heading>
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 @if ($showDriveSetup)
                     <a href="{{ route('connected-accounts.edit') }}" wire:navigate class="group flex items-center gap-4 p-4 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-500/30 transition-all">
@@ -469,6 +468,5 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
                     </div>
                 </a>
             </div>
-        </div>
-    @endif
+    </div>
 </div>
