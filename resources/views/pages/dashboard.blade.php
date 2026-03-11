@@ -297,7 +297,7 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
     </div>
 
     {{-- Chart + Recent Receipts --}}
-    <div class="grid gap-6 lg:grid-cols-5">
+    <div class="grid gap-4 md:gap-8 lg:grid-cols-5 auto-rows-max">
         {{-- 6-Month Spending Chart --}}
         <div class="lg:col-span-3 glow-card rounded-2xl p-6">
             <div class="flex items-center justify-between mb-6">
