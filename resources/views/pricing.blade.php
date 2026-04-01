@@ -124,9 +124,6 @@
 
                     {{-- Professional (Featured) --}}
                     <div class="relative rounded-2xl p-7 flex flex-col border-2 border-emerald-500/40 bg-gradient-to-b from-emerald-500/10 to-zinc-950 glow-md">
-                        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                            <span class="inline-flex items-center rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-zinc-950">Most Popular</span>
-                        </div>
                         <div>
                             <h2 class="text-xs font-semibold text-emerald-400 uppercase tracking-widest">Professional</h2>
                             <div class="mt-4 flex items-baseline gap-1">

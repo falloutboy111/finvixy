@@ -30,6 +30,7 @@ class User extends Authenticatable
         'whatsapp_enabled',
         'avatar',
         'email_2fa_enabled_at',
+        'trusted_devices',
         'first_time_login',
         'last_login_at',
         'last_login_ip',
@@ -52,6 +53,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'whatsapp_enabled' => 'boolean',
             'email_2fa_enabled_at' => 'datetime',
+            'trusted_devices' => 'array',
             'first_time_login' => 'boolean',
             'last_login_at' => 'datetime',
         ];

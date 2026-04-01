@@ -1,7 +1,9 @@
 <?php
 
 use App\Services\EmailOtpService;
+use App\Services\TrustedDeviceService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -10,6 +12,8 @@ new #[Title('Email verification')] #[Layout('layouts.auth.simple')] class extend
     public string $code = '';
 
     public bool $codeSent = false;
+
+    public bool $rememberDevice = false;
 
     public function mount(EmailOtpService $emailOtpService): void
     {
@@ -32,7 +36,7 @@ new #[Title('Email verification')] #[Layout('layouts.auth.simple')] class extend
         $this->codeSent = true;
     }
 
-    public function verify(EmailOtpService $emailOtpService): void
+    public function verify(EmailOtpService $emailOtpService, TrustedDeviceService $trustedDeviceService): void
     {
         $this->validate([
             'code' => ['required', 'string', 'size:6'],
@@ -42,6 +46,11 @@ new #[Title('Email verification')] #[Layout('layouts.auth.simple')] class extend
 
         if ($emailOtpService->verify($user, $this->code)) {
             session()->put('email_otp_verified', true);
+
+            // Issue persistent trusted device cookie
+            $cookie = $trustedDeviceService->issueCookie($user, $this->rememberDevice);
+            Cookie::queue($cookie);
+
             $this->redirect(route('dashboard'));
 
             return;
@@ -87,6 +96,13 @@ new #[Title('Email verification')] #[Layout('layouts.auth.simple')] class extend
                 {{ $message }}
             </flux:text>
         @enderror
+
+        <div class="flex items-center justify-center gap-2 text-sm text-left">
+            <flux:checkbox wire:model="rememberDevice" id="remember_device" />
+            <label for="remember_device" class="text-zinc-400 cursor-pointer select-none">
+                {{ __('Remember this device for 30 days') }}
+            </label>
+        </div>
 
         <flux:button
             variant="primary"

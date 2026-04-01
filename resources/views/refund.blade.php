@@ -64,12 +64,11 @@
                             <nav class="space-y-0.5">
                                 @foreach ([
                                     'overview'       => 'Overview',
+                                    'merchant'       => 'Merchant of Record',
+                                    'refunds'        => 'Refund Eligibility',
+                                    'how-to-request' => 'How to Request',
+                                    'cancellations'  => 'Cancellations',
                                     'free-plan'      => 'Free Plan',
-                                    'paid-plans'     => 'Paid Plans',
-                                    'money-back'     => '14-Day Guarantee',
-                                    'exceptions'     => 'Exceptions',
-                                    'how-to-cancel'  => 'How to Cancel',
-                                    'billing-cycles' => 'Billing Cycles',
                                     'contact'        => 'Contact Us',
                                 ] as $id => $label)
                                     <a href="#{{ $id }}" class="group flex items-center gap-2.5 rounded-lg py-1.5 px-3 text-sm text-zinc-500 transition hover:text-emerald-400 hover:bg-emerald-500/5">
@@ -89,119 +88,109 @@
                                 <span class="text-xs font-medium text-zinc-600 tabular-nums">01</span>
                                 Overview
                             </h2>
-                            <p>Finvixy ("the Service"), operated by Enclivix (Pty) Ltd, is a monthly subscription product. This Refund Policy explains your rights and our obligations regarding charges and cancellations.</p>
-                            <p class="mt-3">We aim to be fair and transparent. If something goes wrong, <a href="mailto:billing@enclivix.com" class="text-emerald-400 hover:underline">contact us</a> — we'll do our best to make it right.</p>
+                            <p>Finvixy ("the Service") is operated by Enclivix (Pty) Ltd. All paid subscriptions are processed by <strong class="text-white">Paddle</strong>, our authorised merchant of record. This means that all billing, payments, and refunds are handled by Paddle in accordance with their policies.</p>
+                            <p class="mt-3">This page summarises how refunds work for Finvixy subscriptions. For the full terms, please refer to <a href="https://www.paddle.com/legal/buyer-terms" class="text-emerald-400 hover:underline" target="_blank" rel="noopener">Paddle's Buyer Terms</a> and <a href="https://www.paddle.com/legal/refund-policy" class="text-emerald-400 hover:underline" target="_blank" rel="noopener">Paddle's Refund Policy</a>.</p>
+                        </section>
+
+                        <section id="merchant" class="border-t border-zinc-800/50 py-10">
+                            <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-3">
+                                <span class="text-xs font-medium text-zinc-600 tabular-nums">02</span>
+                                Merchant of Record
+                            </h2>
+                            <p>Paddle acts as the merchant of record for all Finvixy transactions. When you subscribe to a paid plan, you are purchasing through Paddle's platform. Paddle handles:</p>
+                            <ul class="mt-4 space-y-3">
+                                <li class="flex items-start gap-3">
+                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                    Payment processing and recurring billing
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                    Invoicing and receipts
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                    Sales tax and VAT compliance
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                    Refunds and chargebacks
+                                </li>
+                            </ul>
+                            <p class="mt-4 text-sm text-zinc-400">You may see "Paddle" or "Paddle.com" on your bank or card statement for Finvixy charges.</p>
+                        </section>
+
+                        <section id="refunds" class="border-t border-zinc-800/50 py-10">
+                            <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-3">
+                                <span class="text-xs font-medium text-zinc-600 tabular-nums">03</span>
+                                Refund Eligibility
+                            </h2>
+                            <p>Refunds for Finvixy subscriptions are governed by <a href="https://www.paddle.com/legal/refund-policy" class="text-emerald-400 hover:underline" target="_blank" rel="noopener">Paddle's Refund Policy</a>. In summary:</p>
+                            <ul class="mt-4 space-y-3">
+                                <li class="flex items-start gap-3">
+                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                    <span>Paddle may issue discretionary refunds for requests submitted within <strong class="text-white">14 days</strong> of a transaction</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                    <span>Where local consumer protection laws grant statutory withdrawal rights (e.g. EU/EEA/UK 14-day right), those rights apply and are honoured in full</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                    <span>Refunds for technical or product defects are available where there is evidence of a material issue preventing access to advertised features</span>
+                                </li>
+                            </ul>
+                            <div class="mt-5 rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-5">
+                                <p class="text-sm text-emerald-300">Nothing in this policy limits any mandatory consumer rights you may have under applicable law in your territory of purchase.</p>
+                            </div>
+                        </section>
+
+                        <section id="how-to-request" class="border-t border-zinc-800/50 py-10">
+                            <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-3">
+                                <span class="text-xs font-medium text-zinc-600 tabular-nums">04</span>
+                                How to Request a Refund
+                            </h2>
+                            <p>To request a refund, use one of the following methods:</p>
+                            <ol class="mt-4 space-y-3 list-decimal list-inside text-zinc-300 marker:text-zinc-500">
+                                <li>Use the <strong class="text-white">"View receipt"</strong> or <strong class="text-white">"Manage subscription"</strong> link in your transaction confirmation email from Paddle.</li>
+                                <li>Visit <a href="https://paddle.net" class="text-emerald-400 hover:underline" target="_blank" rel="noopener">paddle.net</a> and select <strong class="text-white">"Request refund"</strong>.</li>
+                                <li>Contact our team at <a href="mailto:billing@enclivix.com" class="text-emerald-400 hover:underline">billing@enclivix.com</a> and we will assist you through the process.</li>
+                            </ol>
+                            <p class="mt-4 text-sm text-zinc-400">If eligible, refunds will be processed by Paddle using the same payment method where possible, within 14 days of the request being approved.</p>
+                        </section>
+
+                        <section id="cancellations" class="border-t border-zinc-800/50 py-10">
+                            <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-3">
+                                <span class="text-xs font-medium text-zinc-600 tabular-nums">05</span>
+                                Cancellations
+                            </h2>
+                            <p>You can cancel your subscription at any time. Your cancellation takes effect at the end of the current billing period, and you will not be charged again after that.</p>
+                            <p class="mt-3">To cancel:</p>
+                            <ol class="mt-4 space-y-3 list-decimal list-inside text-zinc-300 marker:text-zinc-500">
+                                <li>Log in to your Finvixy account and go to <strong class="text-white">Settings → Billing</strong>.</li>
+                                <li>Select <strong class="text-white">Cancel Subscription</strong> and confirm.</li>
+                            </ol>
+                            <p class="mt-4 text-sm text-zinc-400">Alternatively, use the subscription management link in your Paddle receipt email, or email <a href="mailto:billing@enclivix.com" class="text-emerald-400 hover:underline">billing@enclivix.com</a> and we will cancel on your behalf.</p>
+                            <p class="mt-3 text-sm text-zinc-400">After cancellation, your account reverts to the Free plan at the end of the current billing period.</p>
                         </section>
 
                         <section id="free-plan" class="border-t border-zinc-800/50 py-10">
                             <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-3">
-                                <span class="text-xs font-medium text-zinc-600 tabular-nums">02</span>
+                                <span class="text-xs font-medium text-zinc-600 tabular-nums">06</span>
                                 Free Plan
                             </h2>
                             <p>The Free plan has no associated cost. No charges are ever made for Free plan usage, so no refunds are applicable.</p>
                         </section>
 
-                        <section id="paid-plans" class="border-t border-zinc-800/50 py-10">
-                            <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-3">
-                                <span class="text-xs font-medium text-zinc-600 tabular-nums">03</span>
-                                Paid Plans (Starter, Professional, Business)
-                            </h2>
-                            <p>Paid subscriptions are billed monthly at the start of each billing period.</p>
-                            <ul class="mt-4 space-y-3">
-                                <li class="flex items-start gap-3">
-                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                    <span><strong class="text-white">No refunds for the current billing period</strong> once payment has been processed. Your access continues until the end of the period.</span>
-                                </li>
-                                <li class="flex items-start gap-3">
-                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                    <span><strong class="text-white">Cancellation is immediate</strong> and stops renewal — you are not charged for the next period.</span>
-                                </li>
-                                <li class="flex items-start gap-3">
-                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                    <span><strong class="text-white">Downgrades</strong> take effect at the start of the next billing cycle.</span>
-                                </li>
-                            </ul>
-                        </section>
-
-                        <section id="money-back" class="border-t border-zinc-800/50 py-10">
-                            <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-3">
-                                <span class="text-xs font-medium text-zinc-600 tabular-nums">04</span>
-                                14-Day Money-Back Guarantee
-                            </h2>
-                            <p>New customers upgrading to a paid plan for the <strong class="text-white">first time</strong> are eligible for a full refund within <strong class="text-white">14 days</strong> of the first charge — no questions asked.</p>
-                            <div class="mt-5 rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-5">
-                                <p class="text-sm text-emerald-300">To request a refund under this guarantee, email <a href="mailto:billing@enclivix.com" class="underline hover:text-white">billing@enclivix.com</a> within 14 days of your first charge, quoting your account email address.</p>
-                            </div>
-                            <p class="mt-4 text-sm text-zinc-500">This guarantee applies once per customer account. It does not apply to plan upgrades after the initial purchase.</p>
-                        </section>
-
-                        <section id="exceptions" class="border-t border-zinc-800/50 py-10">
-                            <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-3">
-                                <span class="text-xs font-medium text-zinc-600 tabular-nums">05</span>
-                                Exceptions &amp; Special Circumstances
-                            </h2>
-                            <ul class="space-y-3">
-                                <li class="flex items-start gap-3">
-                                    <svg class="size-4 text-zinc-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                    <span><strong class="text-white">Service outages:</strong> Refunds or credits may be issued at our discretion for outages exceeding 24 consecutive hours that substantially impair your use of the Service.</span>
-                                </li>
-                                <li class="flex items-start gap-3">
-                                    <svg class="size-4 text-zinc-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                    <span><strong class="text-white">Duplicate charges:</strong> If you are charged twice for the same period due to a technical error, we will refund the duplicate charge immediately upon verification.</span>
-                                </li>
-                                <li class="flex items-start gap-3">
-                                    <svg class="size-4 text-zinc-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                    <span><strong class="text-white">Unauthorised charges:</strong> If you believe a charge was made without your authorisation, contact your bank to initiate a dispute and notify us at <a href="mailto:billing@enclivix.com" class="text-emerald-400 hover:underline">billing@enclivix.com</a>.</span>
-                                </li>
-                            </ul>
-                        </section>
-
-                        <section id="how-to-cancel" class="border-t border-zinc-800/50 py-10">
-                            <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-3">
-                                <span class="text-xs font-medium text-zinc-600 tabular-nums">06</span>
-                                How to Cancel
-                            </h2>
-                            <p>You can cancel your subscription at any time:</p>
-                            <ol class="mt-4 space-y-3 list-decimal list-inside text-zinc-300 marker:text-zinc-500">
-                                <li>Log in to your Finvixy account.</li>
-                                <li>Go to <strong class="text-white">Settings → Billing</strong>.</li>
-                                <li>Select <strong class="text-white">Cancel Subscription</strong> and confirm.</li>
-                            </ol>
-                            <p class="mt-4 text-sm text-zinc-400">Alternatively, email <a href="mailto:billing@enclivix.com" class="text-emerald-400 hover:underline">billing@enclivix.com</a> and we will cancel on your behalf within one business day.</p>
-                            <p class="mt-3 text-sm text-zinc-400">After cancellation, your account reverts to the Free plan at the end of the current billing period. Your data is retained for 90 days before deletion.</p>
-                        </section>
-
-                        <section id="billing-cycles" class="border-t border-zinc-800/50 py-10">
-                            <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-3">
-                                <span class="text-xs font-medium text-zinc-600 tabular-nums">07</span>
-                                Billing Cycles
-                            </h2>
-                            <ul class="space-y-3">
-                                <li class="flex items-start gap-3">
-                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                    Subscriptions renew automatically on the same calendar date each month.
-                                </li>
-                                <li class="flex items-start gap-3">
-                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                    All prices are in South African Rand (ZAR) and are VAT exclusive.
-                                </li>
-                                <li class="flex items-start gap-3">
-                                    <svg class="size-4 text-emerald-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                    We will notify you by email at least 7 days before any price increase takes effect.
-                                </li>
-                            </ul>
-                        </section>
-
                         <section id="contact" class="border-t border-zinc-800/50 py-10">
                             <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-3">
-                                <span class="text-xs font-medium text-zinc-600 tabular-nums">08</span>
+                                <span class="text-xs font-medium text-zinc-600 tabular-nums">07</span>
                                 Contact Us
                             </h2>
-                            <p>For billing questions or refund requests, contact us at:</p>
+                            <p>For billing questions or help with a refund request, contact us at:</p>
                             <div class="mt-5 rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-2 text-sm">
                                 <p><span class="text-zinc-500">Email:</span> <a href="mailto:billing@enclivix.com" class="text-emerald-400 hover:underline">billing@enclivix.com</a></p>
                                 <p><span class="text-zinc-500">Company:</span> <span class="text-zinc-300">Enclivix (Pty) Ltd, South Africa</span></p>
-                                <p class="text-zinc-500 pt-1">We respond to all billing enquiries within 2 business days.</p>
+                                <p><span class="text-zinc-500">Payments processed by:</span> <a href="https://www.paddle.com" class="text-emerald-400 hover:underline" target="_blank" rel="noopener">Paddle.com</a></p>
                             </div>
                         </section>
 
@@ -225,9 +214,9 @@
                         <span class="text-zinc-800">·</span>
                         <a href="{{ route('privacy') }}" class="hover:text-emerald-400 transition">Privacy Policy</a>
                         <span class="text-zinc-800">·</span>
-                        <a href="{{ route('refund') }}" class="hover:text-emerald-400 transition font-medium text-emerald-400">Refund Policy</a>
+                        <a href="{{ route('refund') }}" class="hover:text-emerald-400 transition">Refund Policy</a>
                     </nav>
-                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix (Pty) Ltd.</p>
+                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix (Pty) Ltd. All rights reserved.</p>
                 </div>
             </div>
         </footer>

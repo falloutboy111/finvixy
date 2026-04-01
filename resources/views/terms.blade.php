@@ -284,13 +284,13 @@
                     <nav class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-zinc-500">
                         <a href="{{ route('pricing') }}" class="hover:text-emerald-400 transition">Pricing</a>
                         <span class="text-zinc-800">·</span>
-                        <a href="{{ route('terms') }}" class="hover:text-emerald-400 transition font-medium text-emerald-400">Terms of Service</a>
+                        <a href="{{ route('terms') }}" class="hover:text-emerald-400 transition">Terms of Service</a>
                         <span class="text-zinc-800">·</span>
                         <a href="{{ route('privacy') }}" class="hover:text-emerald-400 transition">Privacy Policy</a>
                         <span class="text-zinc-800">·</span>
                         <a href="{{ route('refund') }}" class="hover:text-emerald-400 transition">Refund Policy</a>
                     </nav>
-                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix (Pty) Ltd.</p>
+                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix (Pty) Ltd. All rights reserved.</p>
                 </div>
             </div>
         </footer>
