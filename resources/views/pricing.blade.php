@@ -269,7 +269,7 @@
                         <span class="text-zinc-800">·</span>
                         <a href="{{ route('refund') }}" class="hover:text-emerald-400 transition">Refund Policy</a>
                     </nav>
-                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix (Pty) Ltd.</p>
+                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix.</p>
                 </div>
             </div>
         </footer>

@@ -88,7 +88,7 @@
                                 <span class="text-xs font-medium text-zinc-600 tabular-nums">01</span>
                                 Overview
                             </h2>
-                            <p>Finvixy ("the Service") is operated by Enclivix (Pty) Ltd. All paid subscriptions are processed by <strong class="text-white">Paddle</strong>, our authorised merchant of record. This means that all billing, payments, and refunds are handled by Paddle in accordance with their policies.</p>
+                            <p>Finvixy ("the Service") is operated by Enclivix. All paid subscriptions are processed by <strong class="text-white">Paddle</strong>, our authorised merchant of record. This means that all billing, payments, and refunds are handled by Paddle in accordance with their policies.</p>
                             <p class="mt-3">This page summarises how refunds work for Finvixy subscriptions. For the full terms, please refer to <a href="https://www.paddle.com/legal/buyer-terms" class="text-emerald-400 hover:underline" target="_blank" rel="noopener">Paddle's Buyer Terms</a> and <a href="https://www.paddle.com/legal/refund-policy" class="text-emerald-400 hover:underline" target="_blank" rel="noopener">Paddle's Refund Policy</a>.</p>
                         </section>
 
@@ -189,7 +189,7 @@
                             <p>For billing questions or help with a refund request, contact us at:</p>
                             <div class="mt-5 rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-2 text-sm">
                                 <p><span class="text-zinc-500">Email:</span> <a href="mailto:billing@enclivix.com" class="text-emerald-400 hover:underline">billing@enclivix.com</a></p>
-                                <p><span class="text-zinc-500">Company:</span> <span class="text-zinc-300">Enclivix (Pty) Ltd, South Africa</span></p>
+                                <p><span class="text-zinc-500">Company:</span> <span class="text-zinc-300">Enclivix, South Africa</span></p>
                                 <p><span class="text-zinc-500">Payments processed by:</span> <a href="https://www.paddle.com" class="text-emerald-400 hover:underline" target="_blank" rel="noopener">Paddle.com</a></p>
                             </div>
                         </section>
@@ -216,7 +216,7 @@
                         <span class="text-zinc-800">·</span>
                         <a href="{{ route('refund') }}" class="hover:text-emerald-400 transition">Refund Policy</a>
                     </nav>
-                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix (Pty) Ltd. All rights reserved.</p>
+                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix. All rights reserved.</p>
                 </div>
             </div>
         </footer>

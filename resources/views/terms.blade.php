@@ -98,7 +98,7 @@
                                 <span class="text-xs font-medium text-zinc-600 tabular-nums">01</span>
                                 Agreement to Terms
                             </h2>
-                            <p>By accessing or using Finvixy ("the Service"), operated by Enclivix (Pty) Ltd ("we", "our", "us"), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Service.</p>
+                            <p>By accessing or using Finvixy ("the Service"), operated by Enclivix ("we", "our", "us"), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Service.</p>
                         </section>
 
                         <section id="description" class="border-t border-zinc-800/50 py-10">
@@ -225,7 +225,7 @@
                                 <span class="text-xs font-medium text-zinc-600 tabular-nums">11</span>
                                 Limitation of Liability
                             </h2>
-                            <p>To the fullest extent permitted by South African law, Enclivix (Pty) Ltd shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service, including but not limited to loss of data, revenue, or business opportunities.</p>
+                            <p>To the fullest extent permitted by South African law, Enclivix shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service, including but not limited to loss of data, revenue, or business opportunities.</p>
                         </section>
 
                         <section id="termination" class="border-t border-zinc-800/50 py-10">
@@ -264,7 +264,7 @@
                             <p>For questions about these Terms, contact us at:</p>
                             <div class="mt-5 rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-2 text-sm">
                                 <p><span class="text-zinc-500">Email:</span> <a href="mailto:info@enclivix.com" class="text-emerald-400 hover:underline">info@enclivix.com</a></p>
-                                <p><span class="text-zinc-500">Company:</span> <span class="text-zinc-300">Enclivix (Pty) Ltd, South Africa</span></p>
+                                <p><span class="text-zinc-500">Company:</span> <span class="text-zinc-300">Enclivix, South Africa</span></p>
                             </div>
                         </section>
 
@@ -290,7 +290,7 @@
                         <span class="text-zinc-800">·</span>
                         <a href="{{ route('refund') }}" class="hover:text-emerald-400 transition">Refund Policy</a>
                     </nav>
-                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix (Pty) Ltd. All rights reserved.</p>
+                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix. All rights reserved.</p>
                 </div>
             </div>
         </footer>

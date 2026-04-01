@@ -95,7 +95,7 @@
                                 <span class="text-xs font-medium text-zinc-600 tabular-nums">01</span>
                                 Introduction
                             </h2>
-                            <p>Finvixy ("we", "our", "us") is a product of Enclivix (Pty) Ltd, a South African company. This Privacy Policy explains how we collect, use, store, and protect your information when you use our receipt scanning and expense tracking service at <a href="https://finvixy.co.za" class="text-emerald-400 hover:underline">finvixy.co.za</a>.</p>
+                            <p>Finvixy ("we", "our", "us") is a product of Enclivix, a South African company. This Privacy Policy explains how we collect, use, store, and protect your information when you use our receipt scanning and expense tracking service at <a href="https://finvixy.co.za" class="text-emerald-400 hover:underline">finvixy.co.za</a>.</p>
                             <p class="mt-3">By using Finvixy, you agree to the collection and use of information in accordance with this policy.</p>
                         </section>
 
@@ -253,7 +253,7 @@
                             <p>If you have questions about this Privacy Policy or your data, contact us at:</p>
                             <div class="mt-5 rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-2 text-sm">
                                 <p><span class="text-zinc-500">Email:</span> <a href="mailto:info@enclivix.com" class="text-emerald-400 hover:underline">info@enclivix.com</a></p>
-                                <p><span class="text-zinc-500">Company:</span> <span class="text-zinc-300">Enclivix (Pty) Ltd, South Africa</span></p>
+                                <p><span class="text-zinc-500">Company:</span> <span class="text-zinc-300">Enclivix, South Africa</span></p>
                             </div>
                         </section>
 
@@ -279,7 +279,7 @@
                         <span class="text-zinc-800">·</span>
                         <a href="{{ route('refund') }}" class="hover:text-emerald-400 transition">Refund Policy</a>
                     </nav>
-                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix (Pty) Ltd.</p>
+                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix.</p>
                 </div>
             </div>
         </footer>
