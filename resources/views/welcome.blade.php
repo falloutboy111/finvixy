@@ -21,6 +21,7 @@
                         <x-finvixy-wordmark variant="dark" size="lg" />
                     </a>
                     <nav class="flex items-center gap-4">
+                        <a href="{{ route('pricing') }}" class="text-sm font-medium text-gray-400 transition hover:text-emerald-400">Pricing</a>
                         @auth
                             <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400 glow-sm">
                                 Dashboard
@@ -244,156 +245,36 @@
             </div>
         </section>
 
-        {{-- Pricing Section --}}
-        <section id="pricing" class="relative py-20 lg:py-32 border-t border-emerald-500/5">
-            <div class="mx-auto max-w-7xl px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-3xl font-bold text-white sm:text-4xl">Simple, transparent pricing</h2>
-                    <p class="mt-4 text-lg text-gray-400">Start free. Scale as you grow.</p>
+        {{-- Pricing Teaser --}}
+        <section id="pricing" class="relative py-20 lg:py-28 border-t border-emerald-500/5">
+            <div class="absolute inset-0 overflow-hidden pointer-events-none">
+                <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/5 rounded-full blur-3xl"></div>
+            </div>
+            <div class="relative mx-auto max-w-4xl px-6 lg:px-8 text-center">
+                <h2 class="text-3xl font-bold text-white sm:text-4xl">Simple, transparent pricing</h2>
+                <p class="mt-4 text-lg text-gray-400">Start free. Upgrade when you're ready. No surprise fees.</p>
+
+                <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
+                    @foreach ([
+                        ['Free', 'R0'],
+                        ['Starter', 'R99'],
+                        ['Professional', 'R189'],
+                        ['Business', 'R349'],
+                    ] as [$plan, $price])
+                        <div class="{{ $plan === 'Professional' ? 'border-emerald-500/40 bg-emerald-500/10 text-white' : 'border-zinc-800 bg-zinc-900/50 text-zinc-400' }} rounded-xl border px-5 py-3 text-sm">
+                            <span class="font-medium {{ $plan === 'Professional' ? 'text-white' : 'text-zinc-300' }}">{{ $plan }}</span>
+                            <span class="ml-2 text-xs {{ $plan === 'Professional' ? 'text-emerald-400' : 'text-zinc-500' }}">{{ $price }}/mo</span>
+                        </div>
+                    @endforeach
                 </div>
 
-                <div class="grid gap-6 md:grid-cols-3 lg:grid-cols-5">
-                    {{-- Free --}}
-                    <div class="glow-card rounded-2xl p-6 flex flex-col">
-                        <h3 class="text-sm font-medium text-emerald-400 uppercase tracking-wider">Free</h3>
-                        <div class="mt-4 flex items-baseline gap-1">
-                            <span class="text-3xl font-bold text-white">R0</span>
-                            <span class="text-sm text-gray-500">/mo</span>
-                        </div>
-                        <p class="mt-3 text-sm text-gray-400">Perfect for trying out Finvixy.</p>
-                        <ul class="mt-6 space-y-3 text-sm text-gray-400 flex-1">
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                10 receipts/month
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                WhatsApp scanning
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                Basic reports
-                            </li>
-                        </ul>
-                        <a href="{{ Route::has('register') ? route('register') : '#' }}" class="mt-6 block text-center rounded-lg border border-emerald-500/20 px-4 py-2.5 text-sm font-medium text-emerald-400 transition hover:bg-emerald-500/5">
-                            Get Started
-                        </a>
-                    </div>
-
-                    {{-- Starter --}}
-                    <div class="glow-card rounded-2xl p-6 flex flex-col">
-                        <h3 class="text-sm font-medium text-emerald-400 uppercase tracking-wider">Starter</h3>
-                        <div class="mt-4 flex items-baseline gap-1">
-                            <span class="text-3xl font-bold text-white">R99</span>
-                            <span class="text-sm text-gray-500">/mo</span>
-                        </div>
-                        <p class="mt-3 text-sm text-gray-400">For individuals and freelancers.</p>
-                        <ul class="mt-6 space-y-3 text-sm text-gray-400 flex-1">
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                50 receipts/month
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                Google Drive sync
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                Full reports
-                            </li>
-                        </ul>
-                        <a href="{{ Route::has('register') ? route('register') : '#' }}" class="mt-6 block text-center rounded-lg border border-emerald-500/20 px-4 py-2.5 text-sm font-medium text-emerald-400 transition hover:bg-emerald-500/5">
-                            Get Started
-                        </a>
-                    </div>
-
-                    {{-- Professional (Featured) --}}
-                    <div class="relative rounded-2xl p-6 flex flex-col border-2 border-emerald-500/40 bg-gradient-to-b from-emerald-500/10 to-zinc-950 glow-md">
-                        <div class="absolute -top-3 left-1/2 -translate-x-1/2">
-                            <span class="inline-flex items-center rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-zinc-950">Most Popular</span>
-                        </div>
-                        <h3 class="text-sm font-medium text-emerald-400 uppercase tracking-wider">Professional</h3>
-                        <div class="mt-4 flex items-baseline gap-1">
-                            <span class="text-3xl font-bold text-white">R189</span>
-                            <span class="text-sm text-gray-500">/mo</span>
-                        </div>
-                        <p class="mt-3 text-sm text-gray-400">For growing businesses.</p>
-                        <ul class="mt-6 space-y-3 text-sm text-gray-400 flex-1">
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                150 receipts/month
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                Priority processing
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                Spending insights
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                Accountant sharing
-                            </li>
-                        </ul>
-                        <a href="{{ Route::has('register') ? route('register') : '#' }}" class="mt-6 block text-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400 glow-sm">
-                            Get Started
-                        </a>
-                    </div>
-
-                    {{-- Business --}}
-                    <div class="glow-card rounded-2xl p-6 flex flex-col">
-                        <h3 class="text-sm font-medium text-emerald-400 uppercase tracking-wider">Business</h3>
-                        <div class="mt-4 flex items-baseline gap-1">
-                            <span class="text-3xl font-bold text-white">R349</span>
-                            <span class="text-sm text-gray-500">/mo</span>
-                        </div>
-                        <p class="mt-3 text-sm text-gray-400">For teams and businesses.</p>
-                        <ul class="mt-6 space-y-3 text-sm text-gray-400 flex-1">
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                500 receipts/month
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                Team access
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                Advanced analytics
-                            </li>
-                        </ul>
-                        <a href="{{ Route::has('register') ? route('register') : '#' }}" class="mt-6 block text-center rounded-lg border border-emerald-500/20 px-4 py-2.5 text-sm font-medium text-emerald-400 transition hover:bg-emerald-500/5">
-                            Get Started
-                        </a>
-                    </div>
-
-                    {{-- Enterprise --}}
-                    <div class="glow-card rounded-2xl p-6 flex flex-col">
-                        <h3 class="text-sm font-medium text-emerald-400 uppercase tracking-wider">Enterprise</h3>
-                        <div class="mt-4 flex items-baseline gap-1">
-                            <span class="text-3xl font-bold text-white">R599</span>
-                            <span class="text-sm text-gray-500">/mo</span>
-                        </div>
-                        <p class="mt-3 text-sm text-gray-400">Unlimited everything.</p>
-                        <ul class="mt-6 space-y-3 text-sm text-gray-400 flex-1">
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                Unlimited receipts
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                Priority support
-                            </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="size-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                Custom integrations
-                            </li>
-                        </ul>
-                        <a href="{{ Route::has('register') ? route('register') : '#' }}" class="mt-6 block text-center rounded-lg border border-emerald-500/20 px-4 py-2.5 text-sm font-medium text-emerald-400 transition hover:bg-emerald-500/5">
-                            Get Started
-                        </a>
-                    </div>
+                <div class="mt-8">
+                    <a href="{{ route('pricing') }}" class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-7 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400 glow-sm">
+                        View All Plans
+                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638l-3.96-3.96a.75.75 0 111.06-1.06l5.25 5.25a.75.75 0 010 1.06l-5.25 5.25a.75.75 0 11-1.06-1.06l3.96-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
                 </div>
             </div>
         </section>
@@ -420,18 +301,23 @@
         </section>
 
         {{-- Footer --}}
-        <footer class="border-t border-emerald-500/10 py-10">
+        <footer class="border-t border-emerald-500/10 py-8">
             <div class="mx-auto max-w-7xl px-6 lg:px-8">
-                <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
+                <div class="flex flex-col items-center gap-6 md:flex-row md:justify-between">
                     <div class="flex items-center gap-2">
-                        <x-app-logo-icon class="h-8 w-auto" />
+                        <x-app-logo-icon class="h-7 w-auto" />
                         <x-finvixy-wordmark variant="dark" size="sm" />
                     </div>
-                    <nav class="flex items-center gap-6">
-                        <a href="{{ route('privacy') }}" class="text-xs text-gray-500 transition hover:text-emerald-400">Privacy Policy</a>
-                        <a href="{{ route('terms') }}" class="text-xs text-gray-500 transition hover:text-emerald-400">Terms of Service</a>
+                    <nav class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-zinc-500">
+                        <a href="{{ route('pricing') }}" class="hover:text-emerald-400 transition">Pricing</a>
+                        <span class="text-zinc-800">·</span>
+                        <a href="{{ route('terms') }}" class="hover:text-emerald-400 transition">Terms of Service</a>
+                        <span class="text-zinc-800">·</span>
+                        <a href="{{ route('privacy') }}" class="hover:text-emerald-400 transition">Privacy Policy</a>
+                        <span class="text-zinc-800">·</span>
+                        <a href="{{ route('refund') }}" class="hover:text-emerald-400 transition">Refund Policy</a>
                     </nav>
-                    <p class="text-xs text-gray-500">&copy; {{ date('Y') }} Finvixy by Enclivix (Pty) Ltd. All rights reserved.</p>
+                    <p class="text-xs text-zinc-500">&copy; {{ date('Y') }} Finvixy by Enclivix (Pty) Ltd. All rights reserved.</p>
                 </div>
             </div>
         </footer>

@@ -3,8 +3,10 @@
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::view('/pricing', 'pricing')->name('pricing');
 Route::view('/privacy-policy', 'privacy')->name('privacy');
 Route::view('/terms-of-service', 'terms')->name('terms');
+Route::view('/refund-policy', 'refund')->name('refund');
 
 Route::middleware(['auth'])->group(function () {
     Route::livewire('email-otp/challenge', 'pages::auth.email-otp-challenge')->name('email-otp.challenge');
