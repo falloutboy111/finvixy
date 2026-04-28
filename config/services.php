@@ -72,4 +72,24 @@ return [
         'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Paddle Price IDs
+    |--------------------------------------------------------------------------
+    |
+    | Map each plan to its Paddle price identifier. These are used by the
+    | PlanSeeder and the billing UI to initiate Paddle checkouts.
+    | Set these in your .env (e.g. PADDLE_PRICE_STARTER=pri_xxx).
+    |
+    */
+
+    'paddle' => [
+        'prices' => [
+            'starter' => env('PADDLE_PRICE_STARTER'),
+            'professional' => env('PADDLE_PRICE_PROFESSIONAL'),
+            'business' => env('PADDLE_PRICE_BUSINESS'),
+            'enterprise' => env('PADDLE_PRICE_ENTERPRISE'),
+        ],
+    ],
+
 ];

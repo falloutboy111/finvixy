@@ -17,6 +17,7 @@ class Plan extends Model
     protected $fillable = [
         'legacy_uuid',
         'code',
+        'paddle_price_id',
         'name',
         'price_monthly',
         'currency',

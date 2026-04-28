@@ -75,10 +75,10 @@ class SyncReceiptsToDrive implements ShouldQueue
 
         foreach ($expenses as $expense) {
             try {
-                $fileContents = Storage::disk('s3')->get($expense->receipt_path);
+                $fileContents = Storage::disk('org-storage')->get($expense->receipt_path);
 
                 if (! $fileContents) {
-                    Log::warning('SyncReceiptsToDrive: file not found in S3', [
+                    Log::warning('SyncReceiptsToDrive: file not found in org-storage', [
                         'expense_id' => $expense->id,
                         'path' => $expense->receipt_path,
                     ]);

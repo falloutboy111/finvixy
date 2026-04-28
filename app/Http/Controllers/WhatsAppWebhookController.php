@@ -6,13 +6,13 @@ use App\Jobs\ProcessExpenseImage;
 use App\Models\Expense;
 use App\Models\User;
 use App\Models\WhatsappWebhook;
+use App\Services\OrgStorageService;
 use App\Services\PlanLimitService;
 use App\Services\WhatsAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class WhatsAppWebhookController extends Controller
@@ -154,7 +154,7 @@ class WhatsAppWebhookController extends Controller
 
             $this->whatsApp->sendMessage(
                 $from,
-                "⚠️ You've used all *{$limit['used']}/{$limit['limit']}* receipts this month.\n\nUpgrade your plan at ".config('app.url').'/settings/profile'.' to continue scanning.'
+                "⚠️ You've used all *{$limit['used']}/{$limit['limit']}* receipts this month.\n\nUpgrade your plan at ".config('app.url').'/settings/billing'.' to continue scanning.'
             );
 
             return;
@@ -183,10 +183,10 @@ class WhatsAppWebhookController extends Controller
             return;
         }
 
-        // Upload to S3
+        // Upload to org-storage
         $ext = $this->whatsApp->extensionFromMime($mimeType);
-        $s3Path = 'expenses/'.Str::uuid().'.'.$ext;
-        Storage::disk('s3')->put($s3Path, $content);
+        $storageService = new OrgStorageService($user->organisation);
+        $s3Path = $storageService->storeRaw('receipts', $content, Str::uuid().'.'.$ext);
 
         // Create expense
         $expense = Expense::query()->create([

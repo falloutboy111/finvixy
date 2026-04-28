@@ -98,6 +98,11 @@ class GoogleCallbackController extends Controller
                 SyncCategoryFoldersToDrive::dispatch($user->organisation_id, $user->id);
             }
 
+            // If connecting during onboarding, redirect back there
+            if (($stateData['redirect'] ?? null) === 'onboarding') {
+                return redirect()->route('onboarding', ['step' => 3]);
+            }
+
             return redirect()->route('connected-accounts.edit')
                 ->with('google-connected', true)
                 ->with('google-email', $email);
@@ -107,6 +112,11 @@ class GoogleCallbackController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
+            // If connecting during onboarding, redirect back there on error
+            if (isset($stateData) && ($stateData['redirect'] ?? null) === 'onboarding') {
+                return redirect()->route('onboarding', ['step' => 3]);
+            }
 
             return redirect()->route('connected-accounts.edit')
                 ->with('google-error', __('Failed to connect Google account. Please try again.'));

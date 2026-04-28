@@ -9,11 +9,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Paddle\Billable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use Billable, HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     /**
      * @var list<string>
@@ -32,6 +33,7 @@ class User extends Authenticatable
         'email_2fa_enabled_at',
         'trusted_devices',
         'first_time_login',
+        'onboarding_completed_at',
         'last_login_at',
         'last_login_ip',
     ];
@@ -55,6 +57,7 @@ class User extends Authenticatable
             'email_2fa_enabled_at' => 'datetime',
             'trusted_devices' => 'array',
             'first_time_login' => 'boolean',
+            'onboarding_completed_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];
     }

@@ -35,7 +35,7 @@ class PurgeCustomer extends Command
 
         $this->warn('This will permanently delete:');
         $this->line("  User: {$user->name} ({$user->email})");
-        $this->line("  Organisation: ".($organisation?->name ?? 'None'));
+        $this->line('  Organisation: '.($organisation?->name ?? 'None'));
         $this->line("  Expenses: {$expenseCount}");
         $this->line("  S3 files: {$s3Files->count()}");
         $this->line("  Connected accounts: {$user->connectedAccounts->count()}");
@@ -55,7 +55,7 @@ class PurgeCustomer extends Command
                 $deleted = 0;
                 foreach ($s3Files as $path) {
                     try {
-                        Storage::disk('s3')->delete($path);
+                        Storage::disk('org-storage')->delete($path);
                         $deleted++;
                     } catch (\Throwable $e) {
                         $this->warn("  Skipped S3 file (not found or error): {$path}");

@@ -1,12 +1,10 @@
 <?php
 
 use App\Jobs\ProcessExpenseImage;
-use App\Mail\QuotaIncreaseRequest;
 use App\Models\Expense;
+use App\Services\OrgStorageService;
 use App\Services\PlanLimitService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -47,8 +45,6 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
 
     public bool $uploading = false;
 
-    public bool $quotaRequested = false;
-
     /**
      * Get current plan limit info for the logged-in user.
      *
@@ -73,25 +69,6 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
         }
 
         return $limit['used'] >= $limit['limit'];
-    }
-
-    /**
-     * Send a quota increase request email to admin.
-     */
-    public function requestQuotaIncrease(): void
-    {
-        $user = Auth::user();
-        $limit = $this->planLimit;
-
-        Mail::to('keegan@enclivix.com')->send(
-            new QuotaIncreaseRequest(
-                user: $user,
-                currentLimit: (int) $limit['limit'],
-                currentUsage: (int) $limit['used'],
-            )
-        );
-
-        $this->quotaRequested = true;
     }
 
     public function updatedSearch(): void
@@ -185,14 +162,83 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
         }
 
         return Expense::query()
+            ->where('organisation_id', Auth::user()->organisation_id)
             ->with('expenseItems')
             ->find($this->viewingExpenseId);
+    }
+
+    /**
+     * Generate a time-limited pre-signed URL for the receipt (15 minutes).
+     */
+    public function getReceiptUrl(int $expenseId): ?string
+    {
+        $user = Auth::user();
+
+        $expense = Expense::query()
+            ->where('organisation_id', $user->organisation_id)
+            ->find($expenseId);
+
+        if (! $expense || ! $expense->receipt_path) {
+            return null;
+        }
+
+        $storageService = new OrgStorageService($user->organisation);
+
+        return $storageService->temporaryUrl($expense->receipt_path, 15);
     }
 
     public function viewExpense(int $id): void
     {
         $this->viewingExpenseId = $id;
         $this->showDetailModal = true;
+    }
+
+    /**
+     * Open the receipt in a new tab via a temporary pre-signed URL.
+     */
+    public function viewReceipt(int $expenseId): void
+    {
+        $url = $this->getReceiptUrl($expenseId);
+
+        if (! $url) {
+            session()->flash('error', 'Receipt file not available.');
+
+            return;
+        }
+
+        $this->js("window.open('{$url}', '_blank')");
+    }
+
+    /**
+     * Download the receipt via a temporary pre-signed URL with content-disposition.
+     */
+    public function downloadReceipt(int $expenseId): void
+    {
+        $user = Auth::user();
+
+        $expense = Expense::query()
+            ->where('organisation_id', $user->organisation_id)
+            ->find($expenseId);
+
+        if (! $expense || ! $expense->receipt_path) {
+            session()->flash('error', 'Receipt file not available.');
+
+            return;
+        }
+
+        $storageService = new OrgStorageService($user->organisation);
+        $filename = basename($expense->receipt_path);
+
+        $url = $storageService->temporaryUrl($expense->receipt_path, 15);
+
+        $this->js("
+            const a = document.createElement('a');
+            a.href = '{$url}';
+            a.download = '{$filename}';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        ");
     }
 
     public function uploadReceipts(): void
@@ -210,8 +256,10 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
 
         $this->uploading = true;
 
+        $storageService = new OrgStorageService($user->organisation);
+
         foreach ($this->receipts as $file) {
-            $path = $file->store('expenses', 's3');
+            $path = $storageService->store('receipts', $file);
 
             $expense = Expense::query()->create([
                 'organisation_id' => $user->organisation_id,
@@ -244,9 +292,10 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
             ->where('organisation_id', $user->organisation_id)
             ->findOrFail($id);
 
-        // Clean up S3 file
+        // Clean up receipt file and reclaim storage
         if ($expense->receipt_path) {
-            Storage::disk('s3')->delete($expense->receipt_path);
+            $storageService = new OrgStorageService($user->organisation);
+            $storageService->delete($expense->receipt_path);
         }
 
         $expense->expenseItems()->delete();
@@ -355,14 +404,7 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                         <p class="text-xs text-amber-400/70 mt-0.5">Upgrade your plan to continue scanning receipts.</p>
                     </div>
                 </div>
-                @if ($quotaRequested)
-                    <flux:badge color="green" size="sm">Request sent</flux:badge>
-                @else
-                    <flux:button variant="primary" size="sm" wire:click="requestQuotaIncrease" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="requestQuotaIncrease">Increase Quota</span>
-                        <span wire:loading wire:target="requestQuotaIncrease">Sending...</span>
-                    </flux:button>
-                @endif
+                <flux:button variant="primary" size="sm" :href="route('billing')">Upgrade Plan</flux:button>
             </div>
         </div>
     @endif
@@ -657,11 +699,19 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                     <div class="flex items-center gap-2 text-sm">
                         <flux:icon name="paper-clip" variant="mini" class="size-4 text-zinc-500" />
                         <span class="text-zinc-400">Receipt file attached</span>
-                        @if ($exp->drive_web_link)
-                            <a href="{{ $exp->drive_web_link }}" target="_blank" class="text-emerald-400 hover:text-emerald-300 ml-auto">
-                                View on Drive
-                            </a>
-                        @endif
+                        <div class="flex items-center gap-2 ml-auto">
+                            <flux:button size="xs" variant="ghost" icon="eye" wire:click="viewReceipt({{ $exp->id }})">
+                                View
+                            </flux:button>
+                            <flux:button size="xs" variant="ghost" icon="arrow-down-tray" wire:click="downloadReceipt({{ $exp->id }})">
+                                Download
+                            </flux:button>
+                            @if ($exp->drive_web_link)
+                                <a href="{{ $exp->drive_web_link }}" target="_blank" class="text-emerald-400 hover:text-emerald-300 text-xs">
+                                    Drive
+                                </a>
+                            @endif
+                        </div>
                     </div>
                 @endif
 

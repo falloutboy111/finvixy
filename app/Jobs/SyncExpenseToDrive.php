@@ -55,10 +55,10 @@ class SyncExpenseToDrive implements ShouldQueue
         try {
             $driveService = new GoogleDriveService($account, $organisationName);
 
-            $fileContents = Storage::disk('s3')->get($this->expense->receipt_path);
+            $fileContents = Storage::disk('org-storage')->get($this->expense->receipt_path);
 
             if (! $fileContents) {
-                Log::warning('SyncExpenseToDrive: file not found in S3', [
+                Log::warning('SyncExpenseToDrive: file not found in org-storage', [
                     'expense_id' => $this->expense->id,
                     'path' => $this->expense->receipt_path,
                 ]);

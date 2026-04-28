@@ -25,12 +25,17 @@ class Organisation extends Model
         'status',
         'currency',
         'timezone',
+        'storage_type',
+        'storage_used_bytes',
+        'storage_limit_bytes',
     ];
 
     protected function casts(): array
     {
         return [
             'status' => 'string',
+            'storage_used_bytes' => 'integer',
+            'storage_limit_bytes' => 'integer',
         ];
     }
 

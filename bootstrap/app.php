@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\EnsureEmailOtpVerified;
+use App\Http\Middleware\EnsureOnboardingCompleted;
+use App\Http\Middleware\EnsureUserIsSubscribed;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'email.otp' => EnsureEmailOtpVerified::class,
+            'subscribed' => EnsureUserIsSubscribed::class,
+            'onboarded' => EnsureOnboardingCompleted::class,
         ]);
 
         //

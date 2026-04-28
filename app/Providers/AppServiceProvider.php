@@ -2,11 +2,16 @@
 
 namespace App\Providers;
 
+use App\Listeners\SyncSubscriptionPlan;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Paddle\Events\SubscriptionCanceled;
+use Laravel\Paddle\Events\SubscriptionCreated;
+use Laravel\Paddle\Events\SubscriptionUpdated;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +29,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        Event::listen(SubscriptionCreated::class, [SyncSubscriptionPlan::class, 'handleCreated']);
+        Event::listen(SubscriptionUpdated::class, [SyncSubscriptionPlan::class, 'handleUpdated']);
+        Event::listen(SubscriptionCanceled::class, [SyncSubscriptionPlan::class, 'handleCanceled']);
     }
 
     /**

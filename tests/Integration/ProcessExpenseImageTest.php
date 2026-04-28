@@ -4,7 +4,6 @@ namespace Tests\Integration;
 
 use App\Jobs\ProcessExpenseImage;
 use App\Models\Expense;
-use App\Models\ExpenseItem;
 use App\Models\Organisation;
 use App\Services\BedrockAgentService;
 use App\Services\TextractService;
@@ -52,11 +51,11 @@ class ProcessExpenseImageTest extends TestCase
         ]);
 
         // Mock Storage to return file contents
-        Storage::fake('s3');
-        Storage::disk('s3')->put('receipts/test.png', 'fake image data');
+        Storage::fake('org-storage');
+        Storage::disk('org-storage')->put('receipts/test.png', 'fake image data');
 
-        $this->app->bind(TextractService::class, fn() => $mockTextractService);
-        $this->app->bind(BedrockAgentService::class, fn() => $mockBedrockService);
+        $this->app->bind(TextractService::class, fn () => $mockTextractService);
+        $this->app->bind(BedrockAgentService::class, fn () => $mockBedrockService);
 
         // Execute the job
         (new ProcessExpenseImage($expense))->handle($mockTextractService, $mockBedrockService);
@@ -82,7 +81,7 @@ class ProcessExpenseImageTest extends TestCase
         Queue::fake();
 
         $org = Organisation::factory()->create();
-        
+
         // Create original expense
         $original = Expense::factory()->for($org)->create([
             'name' => 'Woolworths',
@@ -113,11 +112,11 @@ class ProcessExpenseImageTest extends TestCase
             'line_items' => [],
         ]);
 
-        Storage::fake('s3');
-        Storage::disk('s3')->put('receipts/test2.png', 'fake image data');
+        Storage::fake('org-storage');
+        Storage::disk('org-storage')->put('receipts/test2.png', 'fake image data');
 
-        $this->app->bind(TextractService::class, fn() => $mockTextractService);
-        $this->app->bind(BedrockAgentService::class, fn() => $mockBedrockService);
+        $this->app->bind(TextractService::class, fn () => $mockTextractService);
+        $this->app->bind(BedrockAgentService::class, fn () => $mockBedrockService);
 
         (new ProcessExpenseImage($duplicate))->handle($mockTextractService, $mockBedrockService);
 
@@ -143,10 +142,10 @@ class ProcessExpenseImageTest extends TestCase
         $mockTextractService = \Mockery::mock(TextractService::class);
         $mockTextractService->shouldReceive('detectText')->andReturn('   ');
 
-        Storage::fake('s3');
-        Storage::disk('s3')->put('receipts/blank.png', 'fake blank image');
+        Storage::fake('org-storage');
+        Storage::disk('org-storage')->put('receipts/blank.png', 'fake blank image');
 
-        $this->app->bind(TextractService::class, fn() => $mockTextractService);
+        $this->app->bind(TextractService::class, fn () => $mockTextractService);
 
         (new ProcessExpenseImage($expense))->handle($mockTextractService, \Mockery::mock(BedrockAgentService::class));
 
@@ -184,11 +183,11 @@ class ProcessExpenseImageTest extends TestCase
             'line_items' => [],
         ]);
 
-        Storage::fake('s3');
-        Storage::disk('s3')->put('receipts/test.png', 'fake data');
+        Storage::fake('org-storage');
+        Storage::disk('org-storage')->put('receipts/test.png', 'fake data');
 
-        $this->app->bind(TextractService::class, fn() => $mockTextractService);
-        $this->app->bind(BedrockAgentService::class, fn() => $mockBedrockService);
+        $this->app->bind(TextractService::class, fn () => $mockTextractService);
+        $this->app->bind(BedrockAgentService::class, fn () => $mockBedrockService);
 
         // Initial status
         $this->assertEquals('pending', $expense->status);

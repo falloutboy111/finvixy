@@ -72,7 +72,7 @@ class ProcessExpenseImage implements ShouldQueue
      */
     protected function processImage(TextractService $textractService, BedrockAgentService $bedrockService): void
     {
-        $fileContents = Storage::disk('s3')->get($this->expense->receipt_path);
+        $fileContents = Storage::disk('org-storage')->get($this->expense->receipt_path);
 
         if (! $fileContents) {
             throw new \RuntimeException("Could not read file from S3: {$this->expense->receipt_path}");
@@ -94,8 +94,9 @@ class ProcessExpenseImage implements ShouldQueue
      */
     protected function processPdf(TextractService $textractService, BedrockAgentService $bedrockService): void
     {
-        $bucket = config('filesystems.disks.s3.bucket');
-        $key = $this->expense->receipt_path;
+        $bucket = config('filesystems.disks.org-storage.bucket');
+        $root = rtrim(config('filesystems.disks.org-storage.root', ''), '/');
+        $key = $root ? $root.'/'.$this->expense->receipt_path : $this->expense->receipt_path;
 
         $jobId = $textractService->startAsyncDetection($bucket, $key);
 
@@ -316,11 +317,11 @@ class ProcessExpenseImage implements ShouldQueue
     protected function sendBudgetAlert($user, array $alert): void
     {
         $message = sprintf(
-            "⚠️ Budget Alert!\n" .
-            "Your %s - %s budget exceeded.\n\n" .
-            "Budget: R%.2f/month\n" .
-            "Used: R%.2f (+R%.2f over)\n" .
-            "This receipt: R%.2f",
+            "⚠️ Budget Alert!\n".
+            "Your %s - %s budget exceeded.\n\n".
+            "Budget: R%.2f/month\n".
+            "Used: R%.2f (+R%.2f over)\n".
+            'This receipt: R%.2f',
             $alert['vendor_name'],
             $alert['category'] ?? 'General',
             $alert['budget_limit'],
@@ -392,8 +393,8 @@ class ProcessExpenseImage implements ShouldQueue
     protected function sendQuotaAlert($user, array $limit): void
     {
         $message = sprintf(
-            "⚠️ Monthly receipt limit reached (%d/%d).\n" .
-            "Upgrade: " . config('app.url') . "/settings/billing",
+            "⚠️ Monthly receipt limit reached (%d/%d).\n".
+            'Upgrade: '.config('app.url').'/settings/billing',
             $limit['used'],
             $limit['limit']
         );
