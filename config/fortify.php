@@ -143,14 +143,14 @@ return [
     |
     */
 
-    'features' => [
-        Features::registration(),
+    'features' => array_filter([
+        config('app.registration_enabled', true) ? Features::registration() : null,
         Features::resetPasswords(),
         Features::twoFactorAuthentication([
             'confirm' => true,
             'confirmPassword' => true,
             // 'window' => 0
         ]),
-    ],
+    ]),
 
 ];

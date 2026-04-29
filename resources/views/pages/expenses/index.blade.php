@@ -700,16 +700,18 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                         <flux:icon name="paper-clip" variant="mini" class="size-4 text-zinc-500" />
                         <span class="text-zinc-400">Receipt file attached</span>
                         <div class="flex items-center gap-2 ml-auto">
-                            <flux:button size="xs" variant="ghost" icon="eye" wire:click="viewReceipt({{ $exp->id }})">
-                                View
-                            </flux:button>
-                            <flux:button size="xs" variant="ghost" icon="arrow-down-tray" wire:click="downloadReceipt({{ $exp->id }})">
-                                Download
-                            </flux:button>
                             @if ($exp->drive_web_link)
-                                <a href="{{ $exp->drive_web_link }}" target="_blank" class="text-emerald-400 hover:text-emerald-300 text-xs">
-                                    Drive
+                                <a href="{{ $exp->drive_web_link }}" target="_blank" class="inline-flex items-center gap-1 text-xs font-medium text-emerald-400 hover:text-emerald-300">
+                                    <flux:icon name="cloud-arrow-up" variant="mini" class="size-3.5" />
+                                    Open in Drive
                                 </a>
+                            @else
+                                <flux:button size="xs" variant="ghost" icon="eye" wire:click="viewReceipt({{ $exp->id }})">
+                                    View
+                                </flux:button>
+                                <flux:button size="xs" variant="ghost" icon="arrow-down-tray" wire:click="downloadReceipt({{ $exp->id }})">
+                                    Download
+                                </flux:button>
                             @endif
                         </div>
                     </div>

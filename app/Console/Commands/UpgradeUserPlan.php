@@ -10,7 +10,8 @@ class UpgradeUserPlan extends Command
 {
     protected $signature = 'app:upgrade-plan
         {email : The user email address}
-        {plan : The plan code (free, starter, professional, business, enterprise)}';
+        {plan : The plan code (free, starter, professional, business, enterprise)}
+        {--unlimited : Toggle unlimited receipt scanning for this organisation}';
 
     protected $description = 'Upgrade or change a user\'s plan';
 
@@ -36,6 +37,11 @@ class UpgradeUserPlan extends Command
         $oldPlan = $user->plan;
 
         $user->update(['plan_id' => $plan->id]);
+
+        if ($this->option('unlimited')) {
+            $user->organisation()->update(['unlimited_receipts' => true]);
+            $this->info('Unlimited receipt scanning ENABLED for this organisation.');
+        }
 
         $oldPlanName = $oldPlan?->name ?? 'None';
         $limit = $plan->is_unlimited ? 'unlimited' : $plan->receipts_limit;

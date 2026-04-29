@@ -28,6 +28,7 @@ class Organisation extends Model
         'storage_type',
         'storage_used_bytes',
         'storage_limit_bytes',
+        'unlimited_receipts',
     ];
 
     protected function casts(): array
@@ -36,6 +37,7 @@ class Organisation extends Model
             'status' => 'string',
             'storage_used_bytes' => 'integer',
             'storage_limit_bytes' => 'integer',
+            'unlimited_receipts' => 'boolean',
         ];
     }
 

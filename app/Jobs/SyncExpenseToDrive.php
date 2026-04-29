@@ -67,8 +67,10 @@ class SyncExpenseToDrive implements ShouldQueue
             }
 
             $extension = pathinfo($this->expense->receipt_path, PATHINFO_EXTENSION) ?: 'jpg';
-            $filename = ($this->expense->name ?? 'receipt').'-'.($this->expense->date?->format('Y-m-d') ?? $this->expense->id).'.'.$extension;
-            $filename = preg_replace('/[^a-zA-Z0-9._\-]/', '_', $filename);
+            $vendorName = preg_replace('/[^a-zA-Z0-9]+/', '_', strtolower($this->expense->name ?? 'receipt'));
+            $vendorName = trim($vendorName, '_');
+            $dateStr = $this->expense->date?->format('Y-m-d') ?? now()->format('Y-m-d');
+            $filename = "{$vendorName}_{$dateStr}.{$extension}";
 
             $mimeType = match (strtolower($extension)) {
                 'pdf' => 'application/pdf',
@@ -77,11 +79,10 @@ class SyncExpenseToDrive implements ShouldQueue
                 default => 'image/jpeg',
             };
 
-            // File into category subfolder (e.g. OrgName-finvixy/Travel/receipt.jpg)
-            $categoryFolder = $this->expense->category ?: 'Uncategorised';
-            $categoryFolder = ucfirst(str_replace(['-', '_'], ' ', $categoryFolder));
+            // File into monthly subfolder (e.g. OrgName-finvixy/2026-04/vendor_2026-04-15.jpg)
+            $monthFolder = ($this->expense->date ?? now())->format('Y-m');
 
-            $result = $driveService->uploadFile($filename, $fileContents, $mimeType, $categoryFolder);
+            $result = $driveService->uploadFile($filename, $fileContents, $mimeType, $monthFolder);
 
             $this->expense->update([
                 'drive_file_id' => $result['id'],

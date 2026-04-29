@@ -15,6 +15,8 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'registration_enabled' => env('REGISTRATION_ENABLED', true),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

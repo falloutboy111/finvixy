@@ -37,8 +37,10 @@ class OrgStorageService
     {
         $this->ensureWithinStorageLimit($file->getSize());
 
+        $monthFolder = now()->format('Y-m');
+
         $path = $this->disk->putFile(
-            $this->orgPrefix.'/'.ltrim($subdirectory, '/'),
+            $this->orgPrefix.'/'.ltrim($subdirectory, '/').'/'.$monthFolder,
             $file,
         );
 
@@ -57,7 +59,9 @@ class OrgStorageService
         $size = strlen($content);
         $this->ensureWithinStorageLimit($size);
 
-        $path = $this->orgPrefix.'/'.ltrim($subdirectory, '/').'/'.$filename;
+        $monthFolder = now()->format('Y-m');
+
+        $path = $this->orgPrefix.'/'.ltrim($subdirectory, '/').'/'.$monthFolder.'/'.$filename;
         $this->disk->put($path, $content);
 
         $this->organisation->increment('storage_used_bytes', $size);
