@@ -52,6 +52,8 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
         $plan = Plan::query()->where('code', $planCode)->firstOrFail();
 
         if (! $plan->paddle_price_id) {
+            $this->nextStep();
+
             return;
         }
 
@@ -254,7 +256,12 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
                     @if ($plan->code === 'enterprise')
                         @continue
                     @endif
-                    <div class="rounded-xl border border-zinc-700 bg-zinc-800 p-5 transition hover:border-emerald-500 hover:shadow-sm">
+                    <button
+                        type="button"
+                        wire:click="subscribe('{{ $plan->code }}')"
+                        wire:loading.attr="disabled"
+                        class="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-5 transition hover:border-emerald-500 hover:shadow-sm cursor-pointer text-left"
+                    >
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="font-semibold text-zinc-100">{{ $plan->name }}</h3>
@@ -267,14 +274,10 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
                                     <p class="font-bold text-zinc-100">R{{ number_format($plan->price_monthly, 0) }}</p>
                                     <flux:text size="xs">/month</flux:text>
                                 </div>
-                                @if ($plan->paddle_price_id)
-                                    <flux:button variant="primary" size="sm" wire:click="subscribe('{{ $plan->code }}')" wire:loading.attr="disabled">
-                                        Select
-                                    </flux:button>
-                                @endif
+                                <flux:icon name="chevron-right" class="size-4 text-zinc-400" />
                             </div>
                         </div>
-                    </div>
+                    </button>
                 @endforeach
             </div>
 
