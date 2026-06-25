@@ -26,7 +26,17 @@ class CreateNewUser implements CreatesNewUsers
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
             'organisation_name' => ['required', 'string', 'max:255'],
-            'whatsapp_number' => ['required', 'string', 'regex:/^\+?[0-9\s\-]{7,20}$/'],
+            'whatsapp_number' => [
+                'required',
+                'string',
+                'regex:/^\+?[0-9\s\-]{7,20}$/',
+                function ($attribute, $value, $fail) {
+                    $cleaned = preg_replace('/[^0-9+]/', '', $value);
+                    if (User::where('whatsapp_number', $cleaned)->exists()) {
+                        $fail('This WhatsApp number is already linked to another account.');
+                    }
+                },
+            ],
         ], [
             'whatsapp_number.required' => 'A WhatsApp number is required so you can scan receipts.',
             'whatsapp_number.regex' => 'Please enter a valid phone number (e.g. +27 012 345 6789).',

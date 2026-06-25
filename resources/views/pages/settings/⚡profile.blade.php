@@ -1,6 +1,7 @@
 <?php
 
 use App\Concerns\ProfileValidationRules;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -46,8 +47,24 @@ new #[Title('Profile settings')] #[Layout('layouts.app.sidebar')] class extends 
      */
     public function updateWhatsApp(): void
     {
+        $userId = Auth::id();
+
         $this->validate([
-            'whatsapp_number' => ['nullable', 'string', 'max:20', 'regex:/^\+?[0-9]{7,15}$/'],
+            'whatsapp_number' => [
+                'nullable',
+                'string',
+                'max:20',
+                'regex:/^\+?[0-9]{7,15}$/',
+                function ($attribute, $value, $fail) use ($userId) {
+                    if (! $value) {
+                        return;
+                    }
+                    $cleaned = preg_replace('/[^0-9+]/', '', $value);
+                    if (User::where('whatsapp_number', $cleaned)->where('id', '!=', $userId)->exists()) {
+                        $fail('This WhatsApp number is already linked to another account.');
+                    }
+                },
+            ],
         ]);
 
         $user = Auth::user();
