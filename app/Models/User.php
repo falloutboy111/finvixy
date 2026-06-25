@@ -62,6 +62,16 @@ class User extends Authenticatable
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user) {
+            $user->subscriptions()->each(fn ($sub) => $sub->items()->delete());
+            $user->subscriptions()->delete();
+            $user->transactions()->delete();
+            $user->customer()->delete();
+        });
+    }
+
     public function organisation(): BelongsTo
     {
         return $this->belongsTo(Organisation::class);
