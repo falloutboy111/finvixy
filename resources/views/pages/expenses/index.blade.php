@@ -352,7 +352,7 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p class="text-sm text-blue-300">Receipts are being processed&hellip; This page will update automatically.</p>
+            <p class="text-sm text-blue-700 dark:text-blue-300">Receipts are being processed&hellip; This page will update automatically.</p>
         </div>
     @endif
 
@@ -400,8 +400,8 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                 <div class="flex items-center gap-3">
                     <flux:icon name="exclamation-triangle" class="size-5 text-amber-400 shrink-0" />
                     <div>
-                        <p class="text-sm font-medium text-amber-300">Monthly receipt limit reached ({{ $this->planLimit['used'] }}/{{ $this->planLimit['limit'] }})</p>
-                        <p class="text-xs text-amber-400/70 mt-0.5">Upgrade your plan to continue scanning receipts.</p>
+                        <p class="text-sm font-medium text-amber-700 dark:text-amber-300">Monthly receipt limit reached ({{ $this->planLimit['used'] }}/{{ $this->planLimit['limit'] }})</p>
+                        <p class="text-xs text-amber-600/80 dark:text-amber-400/70 mt-0.5">Upgrade your plan to continue scanning receipts.</p>
                     </div>
                 </div>
                 <flux:button variant="primary" size="sm" :href="route('billing')">Upgrade Plan</flux:button>
@@ -412,25 +412,25 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
     {{-- Sort bar --}}
     <div class="flex items-center gap-2 mb-4">
         <flux:text class="text-xs text-zinc-500">Sort by:</flux:text>
-        <button wire:click="sort('created_at')" class="text-xs px-2 py-1 rounded-md transition-colors {{ $sortBy === 'created_at' ? 'text-emerald-400 bg-emerald-500/10' : 'text-zinc-400 hover:text-white' }}">
+        <button wire:click="sort('created_at')" class="text-xs px-2 py-1 rounded-md transition-colors {{ $sortBy === 'created_at' ? 'text-emerald-400 bg-emerald-500/10' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white' }}">
             Uploaded
             @if ($sortBy === 'created_at')
                 <flux:icon :name="$sortDir === 'asc' ? 'chevron-up' : 'chevron-down'" variant="micro" class="inline size-3" />
             @endif
         </button>
-        <button wire:click="sort('date')" class="text-xs px-2 py-1 rounded-md transition-colors {{ $sortBy === 'date' ? 'text-emerald-400 bg-emerald-500/10' : 'text-zinc-400 hover:text-white' }}">
+        <button wire:click="sort('date')" class="text-xs px-2 py-1 rounded-md transition-colors {{ $sortBy === 'date' ? 'text-emerald-400 bg-emerald-500/10' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white' }}">
             Receipt Date
             @if ($sortBy === 'date')
                 <flux:icon :name="$sortDir === 'asc' ? 'chevron-up' : 'chevron-down'" variant="micro" class="inline size-3" />
             @endif
         </button>
-        <button wire:click="sort('amount')" class="text-xs px-2 py-1 rounded-md transition-colors {{ $sortBy === 'amount' ? 'text-emerald-400 bg-emerald-500/10' : 'text-zinc-400 hover:text-white' }}">
+        <button wire:click="sort('amount')" class="text-xs px-2 py-1 rounded-md transition-colors {{ $sortBy === 'amount' ? 'text-emerald-400 bg-emerald-500/10' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white' }}">
             Amount
             @if ($sortBy === 'amount')
                 <flux:icon :name="$sortDir === 'asc' ? 'chevron-up' : 'chevron-down'" variant="micro" class="inline size-3" />
             @endif
         </button>
-        <button wire:click="sort('name')" class="text-xs px-2 py-1 rounded-md transition-colors {{ $sortBy === 'name' ? 'text-emerald-400 bg-emerald-500/10' : 'text-zinc-400 hover:text-white' }}">
+        <button wire:click="sort('name')" class="text-xs px-2 py-1 rounded-md transition-colors {{ $sortBy === 'name' ? 'text-emerald-400 bg-emerald-500/10' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white' }}">
             Name
             @if ($sortBy === 'name')
                 <flux:icon :name="$sortDir === 'asc' ? 'chevron-up' : 'chevron-down'" variant="micro" class="inline size-3" />
@@ -470,7 +470,7 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                     <div class="flex-1 min-w-0">
                         <div class="flex items-start justify-between gap-2">
                             <div class="min-w-0">
-                                <p class="text-sm font-semibold text-white truncate">{{ $expense->name }}</p>
+                                <p class="text-sm font-semibold text-zinc-900 dark:text-white truncate">{{ $expense->name }}</p>
                                 <p class="text-xs text-zinc-500 mt-0.5">
                                     @if ($expense->date)
                                         {{ $expense->date->format('d M Y') }}
@@ -480,7 +480,7 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                                 </p>
                             </div>
                             <div class="text-right shrink-0">
-                                <p class="text-sm font-bold text-white">R{{ number_format($expense->amount, 2) }}</p>
+                                <p class="text-sm font-bold text-zinc-900 dark:text-white">R{{ number_format($expense->amount, 2) }}</p>
                                 <flux:badge size="sm" :color="$statusColor" class="mt-1">{{ ucfirst($expense->status) }}</flux:badge>
                             </div>
                         </div>
@@ -488,7 +488,7 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                         {{-- Meta row --}}
                         <div class="flex items-center gap-2 mt-2">
                             @if ($expense->category)
-                                <span class="inline-flex items-center text-[11px] font-medium text-zinc-400 bg-white/[0.05] px-2 py-0.5 rounded-md capitalize">
+                                <span class="inline-flex items-center text-[11px] font-medium text-zinc-600 bg-zinc-900/[0.05] dark:text-zinc-400 dark:bg-white/[0.05] px-2 py-0.5 rounded-md capitalize">
                                     {{ str_replace('-', ' ', $expense->category) }}
                                 </span>
                             @endif
@@ -519,7 +519,7 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
             </div>
         @empty
             <div class="glow-card rounded-2xl p-12 text-center">
-                <div class="flex items-center justify-center size-14 rounded-2xl bg-zinc-800/80 ring-1 ring-zinc-700/50 mx-auto mb-4">
+                <div class="flex items-center justify-center size-14 rounded-2xl bg-zinc-100 ring-1 ring-zinc-200 dark:bg-zinc-800/80 dark:ring-zinc-700/50 mx-auto mb-4">
                     <flux:icon name="document-plus" class="size-7 text-zinc-500" />
                 </div>
                 <p class="text-sm font-medium text-zinc-400">No expenses yet</p>
@@ -551,12 +551,12 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                 {{-- Drop zone --}}
                 <label
                     class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-colors
-                           border-zinc-700 hover:border-emerald-500/40 bg-white/[0.02] hover:bg-emerald-500/5"
+                           border-zinc-300 bg-zinc-900/[0.02] dark:border-zinc-700 dark:bg-white/[0.02] hover:border-emerald-500/40 hover:bg-emerald-500/5"
                     for="receipt-upload"
                 >
                     <div class="flex flex-col items-center justify-center pt-5 pb-6">
                         <flux:icon name="cloud-arrow-up" class="size-8 text-zinc-500 mb-2" />
-                        <p class="text-sm text-zinc-400"><span class="font-semibold text-emerald-400">Click to upload</span> or drag and drop</p>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400"><span class="font-semibold text-emerald-400">Click to upload</span> or drag and drop</p>
                         <p class="text-xs text-zinc-600 mt-1">JPEG, PNG, WEBP, GIF, PDF (max 10MB each)</p>
                     </div>
                     <input
@@ -583,10 +583,10 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                 <div class="space-y-2">
                     <flux:text class="text-sm font-medium">{{ count($receipts) }} file(s) selected</flux:text>
                     @foreach ($receipts as $index => $file)
-                        <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.03] border border-zinc-800" wire:key="file-{{ $index }}">
+                        <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-900/[0.03] border border-zinc-200 dark:bg-white/[0.03] dark:border-zinc-800" wire:key="file-{{ $index }}">
                             <div class="flex items-center gap-2 min-w-0">
                                 <flux:icon name="document-text" variant="mini" class="size-4 text-emerald-400 shrink-0" />
-                                <span class="text-sm text-zinc-300 truncate">{{ $file->getClientOriginalName() }}</span>
+                                <span class="text-sm text-zinc-700 dark:text-zinc-300 truncate">{{ $file->getClientOriginalName() }}</span>
                                 <span class="text-xs text-zinc-600 shrink-0">{{ number_format($file->getSize() / 1024, 0) }} KB</span>
                             </div>
                             <button wire:click="removeReceipt({{ $index }})" class="text-zinc-500 hover:text-red-400 transition-colors p-1">
@@ -635,24 +635,24 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
 
                 {{-- Details grid --}}
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="p-3 rounded-lg bg-white/[0.03] border border-zinc-800">
+                    <div class="p-3 rounded-lg bg-zinc-900/[0.03] border border-zinc-200 dark:bg-white/[0.03] dark:border-zinc-800">
                         <p class="text-xs text-zinc-500 mb-1">Amount</p>
-                        <p class="text-lg font-semibold text-white">R{{ number_format($exp->amount, 2) }}</p>
+                        <p class="text-lg font-semibold text-zinc-900 dark:text-white">R{{ number_format($exp->amount, 2) }}</p>
                     </div>
-                    <div class="p-3 rounded-lg bg-white/[0.03] border border-zinc-800">
+                    <div class="p-3 rounded-lg bg-zinc-900/[0.03] border border-zinc-200 dark:bg-white/[0.03] dark:border-zinc-800">
                         <p class="text-xs text-zinc-500 mb-1">Category</p>
-                        <p class="text-sm text-white capitalize">{{ $exp->category ? str_replace('-', ' ', $exp->category) : 'Uncategorised' }}</p>
+                        <p class="text-sm text-zinc-900 dark:text-white capitalize">{{ $exp->category ? str_replace('-', ' ', $exp->category) : 'Uncategorised' }}</p>
                     </div>
                     @if ($exp->tax)
-                        <div class="p-3 rounded-lg bg-white/[0.03] border border-zinc-800">
+                        <div class="p-3 rounded-lg bg-zinc-900/[0.03] border border-zinc-200 dark:bg-white/[0.03] dark:border-zinc-800">
                             <p class="text-xs text-zinc-500 mb-1">Tax</p>
-                            <p class="text-sm text-white">R{{ number_format($exp->tax, 2) }}</p>
+                            <p class="text-sm text-zinc-900 dark:text-white">R{{ number_format($exp->tax, 2) }}</p>
                         </div>
                     @endif
                     @if ($exp->additional_fields && isset($exp->additional_fields['invoice_number']))
-                        <div class="p-3 rounded-lg bg-white/[0.03] border border-zinc-800">
+                        <div class="p-3 rounded-lg bg-zinc-900/[0.03] border border-zinc-200 dark:bg-white/[0.03] dark:border-zinc-800">
                             <p class="text-xs text-zinc-500 mb-1">Invoice #</p>
-                            <p class="text-sm text-white">{{ $exp->additional_fields['invoice_number'] }}</p>
+                            <p class="text-sm text-zinc-900 dark:text-white">{{ $exp->additional_fields['invoice_number'] }}</p>
                         </div>
                     @endif
                 </div>
@@ -661,10 +661,10 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                 @if ($exp->expenseItems->isNotEmpty())
                     <div>
                         <flux:heading size="sm" class="mb-3">Line Items</flux:heading>
-                        <div class="border border-zinc-800 rounded-lg overflow-hidden">
+                        <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
                             <table class="w-full text-sm">
                                 <thead>
-                                    <tr class="border-b border-zinc-800 bg-white/[0.02]">
+                                    <tr class="border-b border-zinc-200 bg-zinc-900/[0.02] dark:border-zinc-800 dark:bg-white/[0.02]">
                                         <th class="text-left p-3 text-zinc-500 font-medium">Item</th>
                                         <th class="text-right p-3 text-zinc-500 font-medium">Qty</th>
                                         <th class="text-right p-3 text-zinc-500 font-medium">Price</th>
@@ -673,11 +673,11 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                                 </thead>
                                 <tbody>
                                     @foreach ($exp->expenseItems as $item)
-                                        <tr class="border-b border-zinc-800/50 last:border-0" wire:key="item-{{ $item->id }}">
-                                            <td class="p-3 text-zinc-300">{{ $item->name }}</td>
-                                            <td class="p-3 text-right text-zinc-400">{{ $item->qty }}</td>
-                                            <td class="p-3 text-right text-zinc-400">R{{ number_format($item->price, 2) }}</td>
-                                            <td class="p-3 text-right text-white font-medium">R{{ number_format($item->total, 2) }}</td>
+                                        <tr class="border-b border-zinc-200/70 dark:border-zinc-800/50 last:border-0" wire:key="item-{{ $item->id }}">
+                                            <td class="p-3 text-zinc-700 dark:text-zinc-300">{{ $item->name }}</td>
+                                            <td class="p-3 text-right text-zinc-600 dark:text-zinc-400">{{ $item->qty }}</td>
+                                            <td class="p-3 text-right text-zinc-600 dark:text-zinc-400">R{{ number_format($item->price, 2) }}</td>
+                                            <td class="p-3 text-right text-zinc-900 dark:text-white font-medium">R{{ number_format($item->total, 2) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -698,7 +698,7 @@ new #[Title('Expenses')] #[Layout('layouts.app.sidebar')] class extends Componen
                 @if ($exp->receipt_path)
                     <div class="flex items-center gap-2 text-sm">
                         <flux:icon name="paper-clip" variant="mini" class="size-4 text-zinc-500" />
-                        <span class="text-zinc-400">Receipt file attached</span>
+                        <span class="text-zinc-600 dark:text-zinc-400">Receipt file attached</span>
                         <div class="flex items-center gap-2 ml-auto">
                             @if ($exp->drive_web_link)
                                 <a href="{{ $exp->drive_web_link }}" target="_blank" class="inline-flex items-center gap-1 text-xs font-medium text-emerald-400 hover:text-emerald-300">

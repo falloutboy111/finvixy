@@ -172,7 +172,7 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
     <div class="flex items-center justify-center gap-2 mb-8">
         @for ($i = 1; $i <= 3; $i++)
             <div class="flex items-center gap-2">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition {{ $step >= $i ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-zinc-500' }}">
+                <div class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition {{ $step >= $i ? 'bg-emerald-500 text-white' : 'bg-zinc-700 text-zinc-300' }}">
                     @if ($step > $i)
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
                     @else
@@ -180,7 +180,7 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
                     @endif
                 </div>
                 @if ($i < 3)
-                    <div class="h-0.5 w-10 transition {{ $step > $i ? 'bg-emerald-500' : 'bg-zinc-800' }}"></div>
+                    <div class="h-0.5 w-10 transition {{ $step > $i ? 'bg-emerald-500' : 'bg-zinc-700' }}"></div>
                 @endif
             </div>
         @endfor
@@ -188,7 +188,7 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
 
     {{-- Step 1: Account Created --}}
     @if ($step === 1)
-        <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
+        <div class="rounded-xl border border-zinc-700 bg-zinc-800 p-8 text-center shadow-sm">
             <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
                 <svg class="h-8 w-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -197,19 +197,19 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
 
             <flux:heading size="xl">Welcome, {{ $user->name }}!</flux:heading>
             <flux:text class="mt-2 max-w-md mx-auto">
-                Your account and organisation <strong class="text-white">{{ $organisation->name }}</strong> have been created.
+                Your account and organisation <strong class="text-zinc-100">{{ $organisation->name }}</strong> have been created.
                 Let's get you set up in just a couple of steps.
             </flux:text>
 
-            <div class="mt-8 rounded-lg border border-zinc-800 bg-zinc-900 p-4 text-left">
+            <div class="mt-8 rounded-lg border border-zinc-700 bg-zinc-900 p-4 text-left">
                 <div class="space-y-3">
                     <div class="flex items-center gap-3">
                         <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
                             <svg class="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-white">{{ $user->name }}</p>
-                            <p class="text-xs text-zinc-500">{{ $user->email }}</p>
+                            <p class="text-sm font-medium text-zinc-100">{{ $user->name }}</p>
+                            <p class="text-xs text-zinc-400">{{ $user->email }}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
@@ -217,8 +217,8 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
                             <svg class="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-white">{{ $organisation->name }}</p>
-                            <p class="text-xs text-zinc-500">Organisation</p>
+                            <p class="text-sm font-medium text-zinc-100">{{ $organisation->name }}</p>
+                            <p class="text-xs text-zinc-400">Organisation</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
@@ -226,8 +226,8 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
                             <svg class="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-white">Free Plan</p>
-                            <p class="text-xs text-zinc-500">10 receipts/month</p>
+                            <p class="text-sm font-medium text-zinc-100">Free Plan</p>
+                            <p class="text-xs text-zinc-400">10 receipts/month</p>
                         </div>
                     </div>
                 </div>
@@ -254,17 +254,17 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
                     @if ($plan->code === 'enterprise')
                         @continue
                     @endif
-                    <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 transition hover:border-zinc-700">
+                    <div class="rounded-xl border border-zinc-700 bg-zinc-800 p-5 transition hover:border-emerald-500 hover:shadow-sm">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="font-semibold text-white">{{ $plan->name }}</h3>
+                                <h3 class="font-semibold text-zinc-100">{{ $plan->name }}</h3>
                                 <flux:text size="sm">
                                     {{ $plan->hasReceiptLimit() ? $plan->receipts_limit.' receipts/month' : 'Unlimited receipts' }}
                                 </flux:text>
                             </div>
                             <div class="flex items-center gap-4">
                                 <div class="text-right">
-                                    <p class="font-bold text-white">R{{ number_format($plan->price_monthly, 0) }}</p>
+                                    <p class="font-bold text-zinc-100">R{{ number_format($plan->price_monthly, 0) }}</p>
                                     <flux:text size="xs">/month</flux:text>
                                 </div>
                                 @if ($plan->paddle_price_id)
@@ -295,9 +295,9 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
             </div>
 
             {{-- Google Drive Option --}}
-            <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 transition hover:border-zinc-700">
+            <div class="rounded-xl border border-zinc-700 bg-zinc-800 p-6 transition hover:border-emerald-500 hover:shadow-sm">
                 <div class="flex items-start gap-4">
-                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
+                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-700">
                         <svg class="h-7 w-7" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg">
                             <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
                             <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-20.4 35.3c-.8 1.4-1.2 2.95-1.2 4.5h27.5z" fill="#00ac47"/>
@@ -308,7 +308,7 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
                         </svg>
                     </div>
                     <div class="flex-1">
-                        <h3 class="font-semibold text-white">Google Drive</h3>
+                        <h3 class="font-semibold text-zinc-100">Google Drive</h3>
                         <flux:text size="sm" class="mt-1">
                             Store receipts in your own Google Drive. We'll create an organised folder structure automatically.
                         </flux:text>
@@ -333,15 +333,15 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
             </div>
 
             {{-- Finvixy Storage Option --}}
-            <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 transition hover:border-zinc-700">
+            <div class="rounded-xl border border-zinc-700 bg-zinc-800 p-6 transition hover:border-emerald-500 hover:shadow-sm">
                 <div class="flex items-start gap-4">
-                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
+                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-700">
                         <svg class="h-7 w-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
                         </svg>
                     </div>
                     <div class="flex-1">
-                        <h3 class="font-semibold text-white">Finvixy Storage</h3>
+                        <h3 class="font-semibold text-zinc-100">Finvixy Storage</h3>
                         <flux:text size="sm" class="mt-1">
                             We'll securely store your receipts in your own private folder. Up to 1 GB included.
                             Files are encrypted and accessible on demand.
@@ -356,7 +356,7 @@ new #[Title('Welcome to Finvixy')] #[Layout('layouts.auth.simple')] class extend
                 </div>
             </div>
 
-            <flux:text size="xs" class="text-center text-zinc-500 pt-2">
+            <flux:text size="xs" class="text-center text-zinc-400 pt-2">
                 You can switch between storage options later in Settings → Connected Accounts.
             </flux:text>
         </div>

@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-[#050505] antialiased">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-emerald-500/10 bg-[#0a0a0a]">
+    <body class="min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+        <flux:sidebar sticky collapsible="mobile" class="border-e border-emerald-100 bg-white dark:border-emerald-500/10 dark:bg-zinc-900">
             <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-2" wire:navigate>
+                    <x-app-logo-icon class="h-6 w-6 object-contain shrink-0" />
+                    <x-finvixy-wordmark variant="dark" size="base" />
+                </a>
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
-            <flux:separator class="border-emerald-500/10" />
+            <flux:separator class="border-emerald-100 dark:border-emerald-500/10" />
 
             <flux:sidebar.nav class="mt-2">
                 <flux:sidebar.group :heading="__('Overview')" class="grid">
@@ -37,7 +40,7 @@
 
             <flux:spacer />
 
-            <flux:separator class="border-emerald-500/10" />
+            <flux:separator class="border-emerald-100 dark:border-emerald-500/10" />
 
             <flux:sidebar.nav>
                 <flux:sidebar.item icon="cog-6-tooth" :href="route('profile.edit')" wire:navigate>
@@ -103,7 +106,7 @@
             </flux:dropdown>
         </flux:header>
 
-        <flux:main class="bg-[#050505]">
+        <flux:main class="bg-slate-50 dark:bg-zinc-950">
             {{ $slot }}
         </flux:main>
 

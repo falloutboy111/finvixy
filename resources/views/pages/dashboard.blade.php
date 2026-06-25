@@ -174,7 +174,7 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
 <div>
     {{-- Google Drive Setup Banner --}}
     @if ($showDriveSetup && ! $dismissedDriveSetup)
-        <div class="mb-8 relative overflow-hidden rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-zinc-950 p-6 glow-md">
+        <div class="mb-8 relative overflow-hidden rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-white dark:to-zinc-950 p-6 glow-md">
             <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             <div class="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-start gap-4">
@@ -184,14 +184,14 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
                         </svg>
                     </span>
                     <div>
-                        <h3 class="text-base font-semibold text-white">Connect Google Drive to back up your receipts</h3>
-                        <p class="text-sm text-zinc-400 mt-1 max-w-lg">
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-white">Connect Google Drive to back up your receipts</h3>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1 max-w-lg">
                             Your receipts will sync automatically to your own Google Drive, organised by category. You own the data — we just help organise it.
                         </p>
                     </div>
                 </div>
                 <div class="flex items-center gap-3 shrink-0">
-                    <button wire:click="dismissDriveSetup" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+                    <button wire:click="dismissDriveSetup" class="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
                         Later
                     </button>
                     <a href="{{ route('connected-accounts.edit') }}" wire:navigate class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400 glow-sm">
@@ -232,7 +232,7 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
                 </span>
             </div>
             <div>
-                <p class="text-3xl font-bold text-white tracking-tight">R{{ $this->stats['month_total'] }}</p>
+                <p class="text-3xl font-bold text-zinc-900 dark:text-white tracking-tight">R{{ $this->stats['month_total'] }}</p>
                 <p class="text-xs text-zinc-500">{{ $this->stats['month_count'] }} receipts</p>
             </div>
             <div class="flex items-center gap-2">
@@ -262,7 +262,7 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
                 </span>
             </div>
             <div>
-                <p class="text-3xl font-bold text-white tracking-tight">{{ $this->stats['month_count'] }}</p>
+                <p class="text-3xl font-bold text-zinc-900 dark:text-white tracking-tight">{{ $this->stats['month_count'] }}</p>
                 <p class="text-xs text-zinc-500">{{ $this->stats['all_time_count'] }} all time</p>
             </div>
         </div>
@@ -276,7 +276,7 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
                 </span>
             </div>
             <div>
-                <p class="text-3xl font-bold text-white tracking-tight">{{ $this->stats['pending_count'] }}</p>
+                <p class="text-3xl font-bold text-zinc-900 dark:text-white tracking-tight">{{ $this->stats['pending_count'] }}</p>
                 <p class="text-xs text-zinc-500">Awaiting processing</p>
             </div>
         </div>
@@ -290,7 +290,7 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
                 </span>
             </div>
             <div>
-                <p class="text-xl font-bold text-white capitalize truncate">{{ str_replace('-', ' ', $this->stats['top_category']) }}</p>
+                <p class="text-xl font-bold text-zinc-900 dark:text-white capitalize truncate">{{ str_replace('-', ' ', $this->stats['top_category']) }}</p>
                 <p class="text-xs text-zinc-500">R{{ $this->stats['top_category_amount'] }} this month</p>
             </div>
         </div>
@@ -337,7 +337,7 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
                         <div class="flex-1 flex flex-col items-center gap-2" wire:key="bar-{{ $loop->index }}">
                             <span class="text-[11px] font-medium text-zinc-600">R0</span>
                             <div class="w-full h-44 flex items-end">
-                                <div class="w-full rounded-lg bg-zinc-800/60 border border-dashed border-zinc-700/50" style="height: 20%"></div>
+                                <div class="w-full rounded-lg bg-zinc-200/60 border border-dashed border-zinc-300 dark:bg-zinc-800/60 dark:border-zinc-700/50" style="height: 20%"></div>
                             </div>
                             <span class="text-[11px] text-zinc-500">{{ $bar['label'] }}</span>
                         </div>
@@ -351,7 +351,7 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
 
         {{-- Recent Receipts --}}
         <div class="lg:col-span-2 glow-card rounded-2xl p-6">
-            <div class="flex items-center justify-between mb-5 pb-4 border-b border-zinc-800">
+            <div class="flex items-center justify-between mb-5 pb-4 border-b border-zinc-200 dark:border-zinc-800">
                 <div>
                     <flux:heading size="lg">Recent Receipts</flux:heading>
                     <flux:text class="text-xs text-zinc-500 mt-0.5">{{ $this->recentExpenses->count() }} of {{ $this->stats['month_count'] }} this month</flux:text>
@@ -361,18 +361,18 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
 
             <div class="space-y-1">
                 @forelse ($this->recentExpenses as $expense)
-                    <div class="flex items-center justify-between py-2.5 px-2 -mx-2 rounded-lg hover:bg-white/[0.03] transition-colors" wire:key="expense-{{ $expense->id }}">
+                    <div class="flex items-center justify-between py-2.5 px-2 -mx-2 rounded-lg hover:bg-zinc-900/[0.03] dark:hover:bg-white/[0.03] transition-colors" wire:key="expense-{{ $expense->id }}">
                         <div class="flex items-center gap-3 min-w-0">
                             <span class="flex items-center justify-center size-9 rounded-lg bg-emerald-500/10 shrink-0">
                                 <flux:icon name="document-text" variant="mini" class="size-4 text-emerald-400" />
                             </span>
                             <div class="min-w-0">
-                                <p class="text-sm font-medium text-white truncate">{{ $expense->name }}</p>
+                                <p class="text-sm font-medium text-zinc-900 dark:text-white truncate">{{ $expense->name }}</p>
                                 <p class="text-xs text-zinc-500">{{ $expense->date->format('d M Y') }}</p>
                             </div>
                         </div>
                         <div class="text-right shrink-0 ml-3">
-                            <p class="text-sm font-semibold text-white">R{{ number_format($expense->amount, 2) }}</p>
+                            <p class="text-sm font-semibold text-zinc-900 dark:text-white">R{{ number_format($expense->amount, 2) }}</p>
                             @php
                                 $badgeColor = match($expense->status) {
                                     'processed' => 'success',
@@ -388,7 +388,7 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
                     </div>
                 @empty
                     <div class="text-center py-10">
-                        <div class="flex items-center justify-center size-14 rounded-2xl bg-zinc-800/80 ring-1 ring-zinc-700/50 mx-auto mb-4">
+                        <div class="flex items-center justify-center size-14 rounded-2xl bg-zinc-100 ring-1 ring-zinc-200 dark:bg-zinc-800/80 dark:ring-zinc-700/50 mx-auto mb-4">
                             <flux:icon name="document-plus" class="size-7 text-zinc-500" />
                         </div>
                         <p class="text-sm font-medium text-zinc-400">No receipts yet</p>
@@ -409,8 +409,8 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
                     </svg>
                 </span>
                 <div>
-                    <p class="text-sm font-semibold text-white">Scan Receipts via WhatsApp</p>
-                    <p class="text-xs text-zinc-400 mt-0.5">Send a photo of your receipt to <span class="text-emerald-400 font-medium">+27 050 036 7847</span> and we'll do the rest.</p>
+                    <p class="text-sm font-semibold text-zinc-900 dark:text-white">Scan Receipts via WhatsApp</p>
+                    <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">Send a photo of your receipt to <span class="text-emerald-400 font-medium">+27 050 036 7847</span> and we'll do the rest.</p>
                 </div>
             </div>
             <a href="https://wa.me/27500367847" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors shrink-0">
@@ -423,7 +423,7 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
     </div>
 
     {{-- Quick Actions --}}
-    <div class="mt-8 {{ $this->stats['all_time_count'] === 0 ? 'glow-card rounded-2xl p-6' : 'rounded-2xl p-6 bg-white/[0.02] border border-zinc-800/50' }}">
+    <div class="mt-8 {{ $this->stats['all_time_count'] === 0 ? 'glow-card rounded-2xl p-6' : 'rounded-2xl p-6 bg-zinc-900/[0.02] border border-zinc-200 dark:bg-white/[0.02] dark:border-zinc-800/50' }}">
         <flux:heading size="lg" class="mb-4">{{ $this->stats['all_time_count'] === 0 ? 'Get Started' : 'Quick Actions' }}</flux:heading>
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 @if ($showDriveSetup)
@@ -432,38 +432,38 @@ new #[Title('Dashboard')] #[Layout('layouts.app.sidebar')] class extends Compone
                             <flux:icon name="cloud-arrow-up" class="size-5 text-emerald-400" />
                         </span>
                         <div>
-                            <p class="text-sm font-semibold text-white">Connect Drive</p>
+                            <p class="text-sm font-semibold text-zinc-900 dark:text-white">Connect Drive</p>
                             <p class="text-xs text-emerald-400/80">Recommended first step</p>
                         </div>
                     </a>
                 @endif
 
-                <a href="{{ route('expenses.index') }}" wire:navigate class="group flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-zinc-800 hover:border-emerald-500/20 transition-all">
+                <a href="{{ route('expenses.index') }}" wire:navigate class="group flex items-center gap-4 p-4 rounded-xl bg-zinc-900/[0.02] hover:bg-zinc-900/[0.05] border border-zinc-200 hover:border-emerald-500/30 dark:bg-white/[0.02] dark:hover:bg-white/[0.05] dark:border-zinc-800 dark:hover:border-emerald-500/20 transition-all">
                     <span class="flex items-center justify-center size-11 rounded-xl bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
                         <flux:icon name="camera" class="size-5 text-emerald-400" />
                     </span>
                     <div>
-                        <p class="text-sm font-semibold text-white">Scan a Receipt</p>
+                        <p class="text-sm font-semibold text-zinc-900 dark:text-white">Scan a Receipt</p>
                         <p class="text-xs text-zinc-500">Upload or snap a photo</p>
                     </div>
                 </a>
 
-                <a href="{{ route('reports.spending') }}" wire:navigate class="group flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-zinc-800 hover:border-emerald-500/20 transition-all">
+                <a href="{{ route('reports.spending') }}" wire:navigate class="group flex items-center gap-4 p-4 rounded-xl bg-zinc-900/[0.02] hover:bg-zinc-900/[0.05] border border-zinc-200 hover:border-emerald-500/30 dark:bg-white/[0.02] dark:hover:bg-white/[0.05] dark:border-zinc-800 dark:hover:border-emerald-500/20 transition-all">
                     <span class="flex items-center justify-center size-11 rounded-xl bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
                         <flux:icon name="chart-bar-square" class="size-5 text-emerald-400" />
                     </span>
                     <div>
-                        <p class="text-sm font-semibold text-white">View Reports</p>
+                        <p class="text-sm font-semibold text-zinc-900 dark:text-white">View Reports</p>
                         <p class="text-xs text-zinc-500">Spending breakdowns</p>
                     </div>
                 </a>
 
-                <a href="{{ route('reports.insights') }}" wire:navigate class="group flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-zinc-800 hover:border-emerald-500/20 transition-all">
+                <a href="{{ route('reports.insights') }}" wire:navigate class="group flex items-center gap-4 p-4 rounded-xl bg-zinc-900/[0.02] hover:bg-zinc-900/[0.05] border border-zinc-200 hover:border-emerald-500/30 dark:bg-white/[0.02] dark:hover:bg-white/[0.05] dark:border-zinc-800 dark:hover:border-emerald-500/20 transition-all">
                     <span class="flex items-center justify-center size-11 rounded-xl bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
                         <flux:icon name="light-bulb" class="size-5 text-emerald-400" />
                     </span>
                     <div>
-                        <p class="text-sm font-semibold text-white">AI Insights</p>
+                        <p class="text-sm font-semibold text-zinc-900 dark:text-white">AI Insights</p>
                         <p class="text-xs text-zinc-500">Smart spending analysis</p>
                     </div>
                 </a>

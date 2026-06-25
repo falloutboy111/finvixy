@@ -47,8 +47,13 @@
     }
 
     body {
-        background-color: #050505;
-        color: #e5e7eb;
+        background-color: #f8fafc;
+        color: #0f172a;
+    }
+
+    .dark body {
+        background-color: #09090b;
+        color: #f4f4f5;
     }
 }
 
@@ -64,15 +69,24 @@
 }
 
 .glow-card {
-    background: linear-gradient(145deg, rgba(16, 185, 129, 0.06) 0%, rgba(10, 10, 10, 0.95) 60%);
-    border: 1px solid rgba(16, 185, 129, 0.15);
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.06);
+    background: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(255, 255, 255, 0.98) 60%);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.08);
     transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .glow-card:hover {
     border-color: rgba(16, 185, 129, 0.35);
     box-shadow: 0 0 30px rgba(16, 185, 129, 0.12);
+}
+
+.dark .glow-card {
+    background: linear-gradient(145deg, rgba(16, 185, 129, 0.06) 0%, rgba(9, 9, 11, 0.92) 60%);
+}
+
+.dark .glow-card:hover {
+    border-color: rgba(16, 185, 129, 0.35);
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.15);
 }
 
 .gradient-green {
@@ -90,7 +104,7 @@
 input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
-    @apply outline-hidden ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-zinc-950;
+    @apply outline-hidden ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-white;
 }
 
 /* Flux primary button override for emerald accent */
