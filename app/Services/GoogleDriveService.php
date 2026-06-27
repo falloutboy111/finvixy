@@ -102,9 +102,11 @@ class GoogleDriveService
      *
      * @return array{id: string, webViewLink: string}
      */
-    public function uploadFile(string $filename, string $content, string $mimeType = 'application/pdf', ?string $subfolder = null): array
+    public function uploadFile(string $filename, string $content, string $mimeType = 'application/pdf', ?string $subfolder = null, ?string $customFolderId = null): array
     {
-        $folderId = $subfolder ? $this->getOrCreateSubfolder($subfolder) : $this->getOrCreateFolder();
+        $folderId = $subfolder
+            ? $this->getOrCreateSubfolder($subfolder, $customFolderId)
+            : $this->getOrCreateFolder($customFolderId);
 
         $fileMetadata = new DriveFile([
             'name' => $filename,
@@ -131,12 +133,28 @@ class GoogleDriveService
     }
 
     /**
-     * Get or create the main organisation folder.
+     * Get or create the main folder, respecting a user-configured folder ID if set.
      */
-    public function getOrCreateFolder(): string
+    public function getOrCreateFolder(?string $customFolderId = null): string
     {
         if ($this->folderId) {
             return $this->folderId;
+        }
+
+        // Use the user-configured folder if provided and it still exists
+        if ($customFolderId) {
+            try {
+                $folder = $this->service->files->get($customFolderId, ['fields' => 'id, trashed']);
+                if (! $folder->trashed) {
+                    $this->folderId = $customFolderId;
+                    return $this->folderId;
+                }
+            } catch (\Throwable) {
+                // Folder was deleted or permission revoked — fall through to auto-create
+                Log::warning('GoogleDriveService: custom folder not accessible, falling back to default', [
+                    'folder_id' => $customFolderId,
+                ]);
+            }
         }
 
         $response = $this->service->files->listFiles([
@@ -168,11 +186,41 @@ class GoogleDriveService
     }
 
     /**
-     * Get or create a subfolder within the main folder.
+     * List all non-trashed folders the user can access, ordered by name.
+     * Returns an array of ['id' => ..., 'name' => ..., 'path' => ...].
+     *
+     * @return array<int, array{id: string, name: string, path: string}>
      */
-    public function getOrCreateSubfolder(string $subfolderName): string
+    public function listFolders(string $search = ''): array
     {
-        $parentFolderId = $this->getOrCreateFolder();
+        $nameFilter = $search
+            ? " and name contains '".addslashes($search)."'"
+            : '';
+
+        $response = $this->service->files->listFiles([
+            'q' => "mimeType='application/vnd.google-apps.folder' and trashed=false{$nameFilter}",
+            'spaces' => 'drive',
+            'fields' => 'files(id, name, parents)',
+            'orderBy' => 'name',
+            'pageSize' => 100,
+        ]);
+
+        return collect($response->files)
+            ->map(fn ($f) => [
+                'id' => $f->id,
+                'name' => $f->name,
+                'path' => $f->name,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Get or create a subfolder within the main (or custom) folder.
+     */
+    public function getOrCreateSubfolder(string $subfolderName, ?string $customFolderId = null): string
+    {
+        $parentFolderId = $this->getOrCreateFolder($customFolderId);
 
         $response = $this->service->files->listFiles([
             'q' => "mimeType='application/vnd.google-apps.folder' and name='{$subfolderName}' and '{$parentFolderId}' in parents and trashed=false",

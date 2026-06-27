@@ -98,9 +98,8 @@ class SyncReceiptsToDrive implements ShouldQueue
                     default => 'image/jpeg',
                 };
 
-                // Upload to "receipts" subfolder with date-based organization
-                $dateFolder = $expense->date?->format('Y/m');
-                $result = $driveService->uploadFile($filename, $fileContents, $mimeType, 'receipts');
+                $customFolderId = $account->settings['drive_folder_id'] ?? null;
+                $result = $driveService->uploadFile($filename, $fileContents, $mimeType, 'receipts', $customFolderId);
 
                 $expense->update([
                     'drive_file_id' => $result['id'],

@@ -15,6 +15,13 @@ use Livewire\Component;
 new #[Title('Connected accounts')] #[Layout('layouts.app.sidebar')] class extends Component {
     public bool $syncing = false;
 
+    // Drive folder picker state
+    public bool $showFolderPicker = false;
+    public bool $loadingFolders = false;
+    public string $folderSearch = '';
+    public array $availableFolders = [];
+    public string $folderPickerError = '';
+
     /**
      * Get all connected accounts for the current user.
      *
@@ -142,6 +149,74 @@ new #[Title('Connected accounts')] #[Layout('layouts.app.sidebar')] class extend
         unset($this->accounts, $this->isGoogleConnected, $this->googleAccount);
     }
 
+    public function openFolderPicker(): void
+    {
+        $this->showFolderPicker = true;
+        $this->folderPickerError = '';
+        $this->loadFolders();
+    }
+
+    public function loadFolders(): void
+    {
+        $account = $this->googleAccount;
+        if (! $account) {
+            return;
+        }
+
+        $this->loadingFolders = true;
+        $this->folderPickerError = '';
+
+        try {
+            $organisationName = $account->organisation?->name ?? 'Organisation';
+            $driveService = new GoogleDriveService($account, $organisationName);
+            $this->availableFolders = $driveService->listFolders($this->folderSearch);
+        } catch (\Throwable $e) {
+            $this->folderPickerError = __('Could not load Drive folders. Please reconnect your account.');
+            $this->availableFolders = [];
+        } finally {
+            $this->loadingFolders = false;
+        }
+    }
+
+    public function updatedFolderSearch(): void
+    {
+        $this->loadFolders();
+    }
+
+    public function selectFolder(string $folderId, string $folderName): void
+    {
+        $account = $this->googleAccount;
+        if (! $account) {
+            return;
+        }
+
+        $account->update([
+            'settings' => array_merge($account->settings ?? [], [
+                'drive_folder_id' => $folderId,
+                'drive_folder_name' => $folderName,
+            ]),
+        ]);
+
+        $this->showFolderPicker = false;
+        unset($this->googleAccount);
+        session()->flash('status', 'drive-folder-saved');
+    }
+
+    public function clearFolder(): void
+    {
+        $account = $this->googleAccount;
+        if (! $account) {
+            return;
+        }
+
+        $settings = $account->settings ?? [];
+        unset($settings['drive_folder_id'], $settings['drive_folder_name']);
+        $account->update(['settings' => $settings]);
+
+        unset($this->googleAccount);
+        session()->flash('status', 'drive-folder-cleared');
+    }
+
     #[Computed]
     public function xeroConnection(): ?XeroConnection
     {
@@ -207,6 +282,20 @@ new #[Title('Connected accounts')] #[Layout('layouts.app.sidebar')] class extend
                 <flux:callout variant="success" icon="check-circle">
                     <flux:callout.heading>{{ __('All synced') }}</flux:callout.heading>
                     <flux:callout.text>{{ __('All your receipts are already backed up to Google Drive.') }}</flux:callout.text>
+                </flux:callout>
+            @endif
+
+            @if (session('status') === 'drive-folder-saved')
+                <flux:callout variant="success" icon="check-circle">
+                    <flux:callout.heading>{{ __('Folder updated') }}</flux:callout.heading>
+                    <flux:callout.text>{{ __('Receipts will now sync to your chosen folder.') }}</flux:callout.text>
+                </flux:callout>
+            @endif
+
+            @if (session('status') === 'drive-folder-cleared')
+                <flux:callout variant="success" icon="check-circle">
+                    <flux:callout.heading>{{ __('Folder reset') }}</flux:callout.heading>
+                    <flux:callout.text>{{ __('Receipts will sync to the default Finvixy folder.') }}</flux:callout.text>
                 </flux:callout>
             @endif
 
@@ -287,6 +376,64 @@ new #[Title('Connected accounts')] #[Layout('layouts.app.sidebar')] class extend
                                     </flux:text>
                                 </div>
                             </div>
+
+                            {{-- Destination folder --}}
+                            <div class="flex items-center gap-2 rounded-md border border-zinc-700/50 bg-zinc-800/50 px-3 py-2">
+                                <flux:icon.folder class="h-4 w-4 shrink-0 text-zinc-400" />
+                                <flux:text size="sm" class="flex-1 truncate text-zinc-300">
+                                    {{ $this->googleAccount->settings['drive_folder_name'] ?? __('Default (Finvixy folder)') }}
+                                </flux:text>
+                                <flux:button size="sm" variant="ghost" wire:click="openFolderPicker" class="shrink-0">
+                                    {{ __('Change') }}
+                                </flux:button>
+                                @if (! empty($this->googleAccount->settings['drive_folder_id']))
+                                    <flux:button size="sm" variant="ghost" wire:click="clearFolder" class="shrink-0 text-zinc-500 hover:text-red-400">
+                                        {{ __('Reset') }}
+                                    </flux:button>
+                                @endif
+                            </div>
+
+                            {{-- Folder picker panel --}}
+                            @if ($showFolderPicker)
+                                <div class="rounded-md border border-zinc-700 bg-zinc-900 p-4 space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <flux:heading size="sm">{{ __('Choose a Drive folder') }}</flux:heading>
+                                        <flux:button size="sm" variant="ghost" wire:click="$set('showFolderPicker', false)">
+                                            {{ __('Cancel') }}
+                                        </flux:button>
+                                    </div>
+
+                                    <flux:input
+                                        wire:model.live.debounce.400ms="folderSearch"
+                                        placeholder="{{ __('Search folders...') }}"
+                                        icon="magnifying-glass"
+                                        size="sm"
+                                    />
+
+                                    @if ($folderPickerError)
+                                        <flux:text size="sm" class="text-red-400">{{ $folderPickerError }}</flux:text>
+                                    @elseif ($loadingFolders)
+                                        <div class="flex items-center gap-2 text-zinc-500">
+                                            <flux:icon.arrow-path class="h-4 w-4 animate-spin" />
+                                            <flux:text size="sm">{{ __('Loading folders...') }}</flux:text>
+                                        </div>
+                                    @elseif (empty($availableFolders))
+                                        <flux:text size="sm" class="text-zinc-500">{{ __('No folders found.') }}</flux:text>
+                                    @else
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            @foreach ($availableFolders as $folder)
+                                                <button
+                                                    wire:click="selectFolder('{{ $folder['id'] }}', '{{ addslashes($folder['name']) }}')"
+                                                    class="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-zinc-800 transition-colors"
+                                                >
+                                                    <flux:icon.folder class="h-4 w-4 shrink-0 text-zinc-400" />
+                                                    <span class="truncate text-zinc-200">{{ $folder['name'] }}</span>
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
 
                             <div class="flex items-center gap-4 text-sm text-zinc-400">
                                 <div class="flex items-center gap-1.5">
