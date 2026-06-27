@@ -3,6 +3,7 @@
 use App\Jobs\SyncReceiptsToDrive;
 use App\Models\ConnectedAccount;
 use App\Models\Expense;
+use App\Models\XeroConnection;
 use App\Services\GoogleDriveService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -139,6 +140,29 @@ new #[Title('Connected accounts')] #[Layout('layouts.app.sidebar')] class extend
     public function refreshAccounts(): void
     {
         unset($this->accounts, $this->isGoogleConnected, $this->googleAccount);
+    }
+
+    #[Computed]
+    public function xeroConnection(): ?XeroConnection
+    {
+        return XeroConnection::where('user_id', Auth::id())->first();
+    }
+
+    public function disconnectXero(): void
+    {
+        $conn = $this->xeroConnection;
+        if ($conn) {
+            // Best-effort revocation on Xero's side
+            try {
+                \Illuminate\Support\Facades\Http::withToken($conn->access_token)
+                    ->delete(config('xero.connections_url').'/'.$conn->tenant_id);
+            } catch (\Exception) {
+            }
+            $conn->delete();
+        }
+
+        unset($this->xeroConnection);
+        session()->flash('xero-disconnected', true);
     }
 }; ?>
 
@@ -310,6 +334,106 @@ new #[Title('Connected accounts')] #[Layout('layouts.app.sidebar')] class extend
                         </flux:button>
                         <flux:text size="xs" class="mt-2 text-zinc-500">
                             {{ __('You\'ll be redirected to Google to authorize access. We only request permission to create and manage files in a dedicated Finvixy folder.') }}
+                        </flux:text>
+                    </div>
+                @endif
+            </div>
+
+            {{-- Xero section --}}
+            <div class="rounded-lg border border-zinc-800 p-5">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800">
+                            {{-- Xero logo mark --}}
+                            <svg class="h-6 w-6" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="512" height="512" rx="15%" fill="#13B5EA"/>
+                                <path d="M256 135.7c-66.4 0-120.3 53.9-120.3 120.3S189.6 376.3 256 376.3 376.3 322.4 376.3 256 322.4 135.7 256 135.7zm-47.2 155.6-33.5-33.5 33.5-33.5 33.5 33.5-33.5 33.5zm43.4 43.4-33.5-33.5 33.5-33.5 33.5 33.5-33.5 33.5zm3.8-43.4 33.5-33.5 33.5 33.5-33.5 33.5-33.5-33.5zm43.4-43.4-33.5 33.5-33.5-33.5 33.5-33.5 33.5 33.5z" fill="#fff"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <flux:heading size="sm">{{ __('Xero') }}</flux:heading>
+                            <flux:text size="sm" class="text-zinc-400">
+                                {{ __('Push bills and expenses directly to Xero') }}
+                            </flux:text>
+                        </div>
+                    </div>
+
+                    @if ($this->xeroConnection)
+                        <flux:badge color="green" size="sm">{{ __('Connected') }}</flux:badge>
+                    @else
+                        <flux:badge color="zinc" size="sm">{{ __('Not connected') }}</flux:badge>
+                    @endif
+                </div>
+
+                @if (session('xero-connected'))
+                    <div class="mt-4">
+                        <flux:callout variant="success" icon="check-circle">
+                            <flux:callout.heading>{{ __('Xero connected') }}</flux:callout.heading>
+                            <flux:callout.text>{{ __('Connected to :org.', ['org' => session('xero-tenant', 'your organisation')]) }}</flux:callout.text>
+                        </flux:callout>
+                    </div>
+                @endif
+
+                @if (session('xero-error'))
+                    <div class="mt-4">
+                        <flux:callout variant="danger" icon="exclamation-triangle">
+                            <flux:callout.heading>{{ __('Connection failed') }}</flux:callout.heading>
+                            <flux:callout.text>{{ session('xero-error') }}</flux:callout.text>
+                        </flux:callout>
+                    </div>
+                @endif
+
+                @if (session('xero-disconnected'))
+                    <div class="mt-4">
+                        <flux:callout variant="warning" icon="information-circle">
+                            <flux:callout.heading>{{ __('Xero disconnected') }}</flux:callout.heading>
+                            <flux:callout.text>{{ __('Your Xero organisation has been unlinked.') }}</flux:callout.text>
+                        </flux:callout>
+                    </div>
+                @endif
+
+                @if ($this->xeroConnection)
+                    <div class="mt-4 rounded-md border border-zinc-700/50 bg-zinc-800/50 p-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <flux:icon.building-office class="h-5 w-5 text-zinc-400" />
+                                <div>
+                                    <flux:text size="sm" class="font-medium">
+                                        {{ $this->xeroConnection->tenant_name ?? $this->xeroConnection->tenant_id }}
+                                    </flux:text>
+                                    <flux:text size="xs" class="text-zinc-500">
+                                        {{ __('Connected :date', ['date' => $this->xeroConnection->created_at->diffForHumans()]) }}
+                                        @if ($this->xeroConnection->isExpiringSoon(0))
+                                            <span class="text-amber-400"> &middot; {{ __('Token expired — reconnect') }}</span>
+                                        @endif
+                                    </flux:text>
+                                </div>
+                            </div>
+                            <flux:button
+                                variant="danger"
+                                size="sm"
+                                wire:click="disconnectXero"
+                                wire:confirm="{{ __('Are you sure you want to disconnect Xero?') }}"
+                            >
+                                {{ __('Disconnect') }}
+                            </flux:button>
+                        </div>
+                    </div>
+
+                    @if ($this->xeroConnection->isExpiringSoon(0))
+                        <div class="mt-3">
+                            <flux:button variant="primary" size="sm" :href="route('xero.connect')" wire:navigate>
+                                {{ __('Reconnect Xero') }}
+                            </flux:button>
+                        </div>
+                    @endif
+                @else
+                    <div class="mt-4">
+                        <flux:button variant="primary" :href="route('xero.connect')" icon="arrow-top-right-on-square">
+                            {{ __('Connect Xero') }}
+                        </flux:button>
+                        <flux:text size="xs" class="mt-2 text-zinc-500">
+                            {{ __("You'll be redirected to Xero to authorise access.") }}
                         </flux:text>
                     </div>
                 @endif

@@ -37,3 +37,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Google OAuth callback — no auth middleware, state carries user_id
 Route::get('auth/google/callback', \App\Http\Controllers\GoogleCallbackController::class)
     ->name('google.callback');
+
+// Xero OAuth routes — auth middleware protects all three
+Route::middleware(['auth'])->group(function () {
+    Route::get('xero/connect', [\App\Http\Controllers\XeroAuthController::class, 'redirect'])->name('xero.connect');
+    Route::get('xero/callback', [\App\Http\Controllers\XeroAuthController::class, 'callback'])->name('xero.callback');
+    Route::post('xero/disconnect', [\App\Http\Controllers\XeroAuthController::class, 'disconnect'])->name('xero.disconnect');
+});
