@@ -65,7 +65,7 @@ return [
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('ORG_STORAGE_BUCKET', 'finvixy-org-storage'),
+            'bucket' => env('ORG_STORAGE_BUCKET', env('AWS_BUCKET', 'finvixy-org-storage')),
             'root' => 'finvixy',
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
