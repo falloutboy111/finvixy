@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\SyncExpenseToCrm;
 use App\Mail\QuotaExceededMail;
 use App\Models\Expense;
 use App\Models\ExpenseItem;
@@ -207,6 +208,9 @@ class ProcessExpenseImage implements ShouldQueue
         // Auto-sync to Google Drive if connected
         SyncExpenseToDrive::dispatch($this->expense);
 
+        // Push to Enclivix CRM if enabled for this user
+        SyncExpenseToCrm::dispatch($this->expense);
+
         // Notify via WhatsApp if the receipt came from WhatsApp
         SendWhatsAppExpenseResult::dispatch($this->expense->fresh());
 
@@ -236,10 +240,10 @@ class ProcessExpenseImage implements ShouldQueue
 
             ExpenseItem::query()->create([
                 'expense_id' => $this->expense->id,
-                'name' => $name,
-                'qty' => $qty,
-                'price' => $price,
-                'total' => $total,
+                'name'       => $name,
+                'qty'        => $qty,
+                'price'      => $price,
+                'total'      => $total,
             ]);
         }
     }

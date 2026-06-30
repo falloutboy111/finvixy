@@ -16,9 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'email.otp' => EnsureEmailOtpVerified::class,
-            'subscribed' => EnsureUserIsSubscribed::class,
-            'onboarded' => EnsureOnboardingCompleted::class,
+            'email.otp'        => EnsureEmailOtpVerified::class,
+            'subscribed'       => EnsureUserIsSubscribed::class,
+            'onboarded'        => EnsureOnboardingCompleted::class,
+            'agent.tools.auth' => \App\Http\Middleware\AgentToolsAuth::class,
         ]);
 
         //

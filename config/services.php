@@ -66,10 +66,11 @@ return [
     */
 
     'whatsapp' => [
-        'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
-        'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
+        'access_token'    => env('WHATSAPP_ACCESS_TOKEN'),
+        'verify_token'    => env('WHATSAPP_VERIFY_TOKEN'),
+        'app_secret'      => env('WHATSAPP_APP_SECRET'),
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
-        'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
+        'api_version'     => env('WHATSAPP_API_VERSION', 'v21.0'),
     ],
 
     /*
@@ -90,6 +91,80 @@ return [
             'business' => env('PADDLE_PRICE_BUSINESS'),
             'enterprise' => env('PADDLE_PRICE_ENTERPRISE'),
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Agent Tools
+    |--------------------------------------------------------------------------
+    |
+    | Shared secret for the /api/agent/tools/dispatch endpoint. The external
+    | AI agent must supply this as a Bearer token. Generate with:
+    |   php artisan key:generate --show | head -c 64
+    | or any cryptographically random string of 32+ chars.
+    |
+    */
+
+    'agent_tools' => [
+        'secret'       => env('AGENT_TOOLS_SECRET'),
+        'hourly_limit' => (int) env('INVOKE_HOURLY_LIMIT', 50),
+    ],
+
+    'lookup' => [
+        'monthly_cap' => (int) env('LOOKUP_MONTHLY_CAP', 50),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | AgentCore Runtime
+    |--------------------------------------------------------------------------
+    |
+    | HTTP endpoint for the AgentCore runtime (POST /invocations).
+    | Dev:  http://localhost:8083   (agentcore dev port)
+    | Prod: https://<deployed-endpoint>
+    |
+    */
+
+    'agentcore' => [
+        'mode'        => env('AGENTCORE_MODE', 'local'),
+        'endpoint'    => env('AGENTCORE_ENDPOINT', 'http://127.0.0.1:8081'),
+        'runtime_arn' => env('AGENTCORE_RUNTIME_ARN'),
+        'region'      => env('AGENTCORE_REGION', 'eu-central-1'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Serper (Google Search API)
+    |--------------------------------------------------------------------------
+    |
+    | Used by the lookup_price agent tool to fetch indicative retail prices.
+    | Results are NEVER persisted — read once, returned, discarded.
+    | Get an API key at https://serper.dev
+    |
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Enclivix CRM
+    |--------------------------------------------------------------------------
+    |
+    | Used to push expenses to the internal CRM. Only active when
+    | crm_sync_enabled is true for the user (enclivix.com accounts only).
+    | ENCLIVIX_CRM_TOKEN is a secret — keep it in .env, never commit it.
+    |
+    */
+
+    'enclivix_crm' => [
+        'base_url' => env('ENCLIVIX_CRM_BASE_URL', 'https://crm.enclivix.com'),
+        'token'    => env('ENCLIVIX_CRM_TOKEN'),
+    ],
+
+    'serper' => [
+        'api_key'  => env('SERPER_API_KEY'),
+        'endpoint' => env('SERPER_ENDPOINT', 'https://google.serper.dev/search'),
+        'gl'       => env('SERPER_GL', 'za'),
+        'location' => env('SERPER_LOCATION', 'Johannesburg, South Africa'),
+        'num'      => (int) env('SERPER_NUM', 8),
     ],
 
 ];

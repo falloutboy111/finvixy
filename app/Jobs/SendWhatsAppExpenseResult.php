@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Expense;
+use App\Services\AgentCoreService;
 use App\Services\WhatsAppService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -22,7 +23,7 @@ class SendWhatsAppExpenseResult implements ShouldQueue
         $this->queue = 'default';
     }
 
-    public function handle(WhatsAppService $whatsApp): void
+    public function handle(WhatsAppService $whatsApp, AgentCoreService $agentCore): void
     {
         $fields = $this->expense->additional_fields ?? [];
 
@@ -75,6 +76,11 @@ class SendWhatsAppExpenseResult implements ShouldQueue
             $lines[] = 'View details at '.config('app.url').'/expenses';
 
             $whatsApp->sendMessage($to, implode("\n", $lines));
+
+            // Push receipt data into the agent session so the user can ask
+            // follow-up questions ("what did I just buy?", "is that a duplicate?").
+            $this->seedAgentSession($expense, $agentCore);
+
         } elseif ($expense->status === 'failed') {
             $error = $fields['error'] ?? 'Unknown error';
             $whatsApp->sendMessage(
@@ -88,5 +94,55 @@ class SendWhatsAppExpenseResult implements ShouldQueue
             'to' => $to,
             'status' => $expense->status,
         ]);
+    }
+
+    /**
+     * Inject the processed receipt into the agent's conversation session.
+     * The agent's response is discarded — only the exchange history matters,
+     * so that follow-up questions ("what did I just buy?") work correctly.
+     */
+    private function seedAgentSession(Expense $expense, AgentCoreService $agentCore): void
+    {
+        $user = $expense->user;
+
+        if (! $user || ! $expense->organisation_id) {
+            return;
+        }
+
+        $lines = [
+            '[Receipt scanned] Your receipt has been processed:',
+            'Store: '.$expense->name,
+            'Amount: R'.number_format((float) $expense->amount, 2),
+            'Date: '.($expense->date?->format('d M Y') ?? 'unknown'),
+            'Category: '.($expense->category ?? 'uncategorised'),
+            'Expense ID: '.$expense->id,
+        ];
+
+        $items = $expense->expenseItems()->get();
+        if ($items->isNotEmpty()) {
+            $lines[] = 'Items:';
+            foreach ($items as $item) {
+                $lines[] = '  - '.$item->name.' (×'.((float) $item->qty).') R'.number_format((float) $item->total, 2);
+            }
+        }
+
+        if ($expense->is_duplicate) {
+            $lines[] = 'Note: possible duplicate of an existing expense.';
+        }
+
+        try {
+            // Invoke the agent to seed the session; response is not forwarded to the user.
+            $agentCore->invoke(implode("\n", $lines), $expense->organisation_id, $user->id);
+
+            Log::info('Agent session seeded with receipt', [
+                'expense_id' => $expense->id,
+                'user_id'    => $user->id,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to seed agent session with receipt', [
+                'expense_id' => $expense->id,
+                'error'      => $e->getMessage(),
+            ]);
+        }
     }
 }

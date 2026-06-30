@@ -15,6 +15,12 @@ return [
             'agent_id' => env('BEDROCK_EXPENSE_PARSER_AGENT_ID'),
             'alias_id' => env('BEDROCK_EXPENSE_PARSER_ALIAS_ID'),
         ],
+
+        // Strands conversational agent — handles WhatsApp text messages
+        'whatsapp_assistant' => [
+            'agent_id' => env('WHATSAPP_BEDROCK_AGENT_ID'),
+            'alias_id' => env('WHATSAPP_BEDROCK_ALIAS_ID'),
+        ],
     ],
 
 ];

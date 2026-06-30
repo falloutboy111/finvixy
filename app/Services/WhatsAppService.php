@@ -115,6 +115,110 @@ class WhatsAppService
     }
 
     /**
+     * Send a text message — preferred name; delegates to sendMessage().
+     */
+    public function sendText(string $to, string $body): bool
+    {
+        return $this->sendMessage($to, $body);
+    }
+
+    /**
+     * Send an interactive reply-button message (max 3 buttons).
+     *
+     * $buttons format: [['id' => 'category:meals', 'title' => 'Meals']]
+     * Button titles are truncated to 20 chars (WhatsApp limit).
+     */
+    public function sendButtons(string $to, string $body, array $buttons): bool
+    {
+        try {
+            $interactiveButtons = array_map(fn ($btn) => [
+                'type'  => 'reply',
+                'reply' => [
+                    'id'    => (string) $btn['id'],
+                    'title' => mb_substr((string) $btn['title'], 0, 20),
+                ],
+            ], array_slice($buttons, 0, 3));
+
+            $response = Http::withToken($this->accessToken)
+                ->post($this->apiUrl('messages'), [
+                    'messaging_product' => 'whatsapp',
+                    'recipient_type'    => 'individual',
+                    'to'                => $to,
+                    'type'              => 'interactive',
+                    'interactive'       => [
+                        'type'   => 'button',
+                        'body'   => ['text' => $body],
+                        'action' => ['buttons' => $interactiveButtons],
+                    ],
+                ]);
+
+            if ($response->successful()) {
+                Log::info('WhatsApp buttons sent', ['to' => $to, 'count' => count($interactiveButtons)]);
+
+                return true;
+            }
+
+            Log::error('WhatsApp sendButtons failed', [
+                'to'     => $to,
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::error('WhatsApp sendButtons exception', ['to' => $to, 'error' => $e->getMessage()]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Send an interactive list message (up to 10 rows across sections).
+     *
+     * $sections format:
+     *   [['title' => 'Heading', 'rows' => [['id' => '...', 'title' => '...', 'description' => '...']]]]
+     */
+    public function sendList(string $to, string $header, string $body, array $sections): bool
+    {
+        try {
+            $response = Http::withToken($this->accessToken)
+                ->post($this->apiUrl('messages'), [
+                    'messaging_product' => 'whatsapp',
+                    'recipient_type'    => 'individual',
+                    'to'                => $to,
+                    'type'              => 'interactive',
+                    'interactive'       => [
+                        'type'   => 'list',
+                        'header' => ['type' => 'text', 'text' => $header],
+                        'body'   => ['text' => $body],
+                        'action' => [
+                            'button'   => 'Choose',
+                            'sections' => $sections,
+                        ],
+                    ],
+                ]);
+
+            if ($response->successful()) {
+                Log::info('WhatsApp list sent', ['to' => $to]);
+
+                return true;
+            }
+
+            Log::error('WhatsApp sendList failed', [
+                'to'     => $to,
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::error('WhatsApp sendList exception', ['to' => $to, 'error' => $e->getMessage()]);
+
+            return false;
+        }
+    }
+
+    /**
      * Resolve a file extension from a MIME type.
      */
     public function extensionFromMime(string $mimeType): string

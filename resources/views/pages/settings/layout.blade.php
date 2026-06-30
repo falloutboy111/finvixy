@@ -10,6 +10,7 @@
             <flux:navlist.item :href="route('categories.edit')" wire:navigate>{{ __('Expense Categories') }}</flux:navlist.item>
             <flux:navlist.item :href="route('billing')" wire:navigate>{{ __('Billing') }}</flux:navlist.item>
             <flux:navlist.item :href="route('usage')" wire:navigate>{{ __('Usage') }}</flux:navlist.item>
+            <flux:navlist.item :href="route('crm.settings')" wire:navigate>{{ __('CRM') }}</flux:navlist.item>
             <flux:navlist.item :href="route('appearance.edit')" wire:navigate>{{ __('Appearance') }}</flux:navlist.item>
         </flux:navlist>
     </div>

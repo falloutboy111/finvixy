@@ -12,6 +12,7 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('settings/categories', 'pages::settings.categories')->name('categories.edit');
     Route::livewire('settings/billing', 'pages::settings.billing')->name('billing');
     Route::livewire('settings/usage', 'pages::settings.usage')->name('usage');
+    Route::livewire('settings/crm', 'pages::settings.crm')->name('crm.settings');
 
     Route::get('billing/invoice/{transaction}', function (Transaction $transaction) {
         return $transaction->redirectToInvoicePdf();

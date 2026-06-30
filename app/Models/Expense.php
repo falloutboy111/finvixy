@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Expense extends Model
 {
     /** @use HasFactory<\Database\Factories\ExpenseFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * @var list<string>
@@ -34,6 +35,9 @@ class Expense extends Model
         'status',
         'is_duplicate',
         'duplicate_of',
+        'crm_expense_id',
+        'crm_synced_at',
+        'crm_project_id',
     ];
 
     protected function casts(): array
@@ -43,7 +47,9 @@ class Expense extends Model
             'date' => 'date',
             'additional_fields' => 'array',
             'extracted_data' => 'array',
-            'is_duplicate' => 'boolean',
+            'is_duplicate'  => 'boolean',
+            'crm_synced_at' => 'datetime',
+            'crm_project_id' => 'integer',
         ];
     }
 
