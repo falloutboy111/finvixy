@@ -24,7 +24,7 @@ class AgentCoreService
     {
         $startTime = microtime(true);
         $bucket    = (int) floor(now()->timestamp / 600); // rolls over every 10 minutes
-        $sessionId = 'wa-'.$userId.'-'.$bucket;
+        $sessionId = str_pad('wa-'.$userId.'-'.$bucket, 33, '0'); // AgentCore requires >= 33 chars
         $payload   = [
             'organisation_id' => (string) $orgId,
             'user_id'         => (string) $userId,
