@@ -74,10 +74,17 @@ class SyncReceiptsToDrive implements ShouldQueue
             'expenses_to_sync' => $expenses->count(),
         ]);
 
-        // Resolve root folder and custom path once — reused for every expense.
+        // Resolve root → custom path ONCE before the loop.
+        // Month subfolders are cached per unique month to avoid redundant Drive API calls.
         $customFolderId = $account->settings['drive_folder_id'] ?? null;
         $customPath     = $account->settings['drive_folder_path'] ?? null;
         $rootFolderId   = $driveService->getOrCreateFolder($customFolderId);
+        $pathRootId     = $customPath
+            ? $driveService->navigatePath($rootFolderId, $customPath)
+            : $rootFolderId;
+
+        /** @var array<string, string> $monthFolderCache */
+        $monthFolderCache = [];
 
         $synced = 0;
         $failed = 0;
@@ -96,9 +103,11 @@ class SyncReceiptsToDrive implements ShouldQueue
                     continue;
                 }
 
-                $extension = pathinfo($expense->receipt_path, PATHINFO_EXTENSION) ?: 'jpg';
-                $filename  = ($expense->name ?? 'receipt').'-'.($expense->date?->format('Y-m-d') ?? $expense->id).'.'.$extension;
-                $filename  = preg_replace('/[^a-zA-Z0-9._\-]/', '_', $filename);
+                $extension  = pathinfo($expense->receipt_path, PATHINFO_EXTENSION) ?: 'jpg';
+                $vendorName = preg_replace('/[^a-zA-Z0-9]+/', '_', strtolower($expense->name ?? 'receipt'));
+                $vendorName = trim($vendorName, '_');
+                $dateStr    = $expense->date?->format('Y-m-d') ?? now()->format('Y-m-d');
+                $filename   = "{$vendorName}_{$dateStr}.{$extension}";
 
                 $mimeType = match (strtolower($extension)) {
                     'pdf'  => 'application/pdf',
@@ -107,12 +116,11 @@ class SyncReceiptsToDrive implements ShouldQueue
                     default => 'image/jpeg',
                 };
 
-                // Walk custom path then monthly bucket — same structure as SyncExpenseToDrive.
-                $monthFolder    = ($expense->date ?? now())->format('Y-m');
-                $targetFolderId = $customPath
-                    ? $driveService->navigatePath($rootFolderId, $customPath)
-                    : $rootFolderId;
-                $targetFolderId = $driveService->navigatePath($targetFolderId, $monthFolder);
+                $monthKey = ($expense->date ?? now())->format('Y-m');
+                if (! isset($monthFolderCache[$monthKey])) {
+                    $monthFolderCache[$monthKey] = $driveService->navigatePath($pathRootId, $monthKey);
+                }
+                $targetFolderId = $monthFolderCache[$monthKey];
 
                 $result = $driveService->uploadFileToFolder($filename, $fileContents, $mimeType, $targetFolderId);
 

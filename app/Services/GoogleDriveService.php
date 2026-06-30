@@ -163,13 +163,15 @@ class GoogleDriveService
         }
 
         $response = $this->service->files->listFiles([
-            'q' => "mimeType='application/vnd.google-apps.folder' and name='{$this->folderName}' and trashed=false",
-            'spaces' => 'drive',
-            'fields' => 'files(id, name)',
+            'q'       => "mimeType='application/vnd.google-apps.folder' and name='{$this->folderName}' and trashed=false",
+            'spaces'  => 'drive',
+            'fields'  => 'files(id, name)',
+            'orderBy' => 'createdTime',  // oldest first — picks the original if duplicates exist
         ]);
 
         if (count($response->files) > 0) {
             $this->folderId = $response->files[0]->id;
+            $this->pinFolderIdToAccount($this->folderId);
 
             return $this->folderId;
         }
@@ -181,6 +183,7 @@ class GoogleDriveService
 
         $folder = $this->service->files->create($fileMetadata, ['fields' => 'id']);
         $this->folderId = $folder->id;
+        $this->pinFolderIdToAccount($this->folderId);
 
         Log::info('Created Google Drive folder', [
             'folder_name' => $this->folderName,
@@ -333,6 +336,20 @@ class GoogleDriveService
         ]);
 
         return $folder->id;
+    }
+
+    /**
+     * Persist a discovered/created root folder ID to account settings so future
+     * lookups use the ID directly instead of a name search (prevents duplicate folders).
+     */
+    private function pinFolderIdToAccount(string $folderId): void
+    {
+        $settings = $this->account->settings ?? [];
+        if (($settings['drive_folder_id'] ?? null) === $folderId) {
+            return;
+        }
+        $settings['drive_folder_id'] = $folderId;
+        $this->account->update(['settings' => $settings]);
     }
 
     protected function sanitizeFolderName(string $name): string
