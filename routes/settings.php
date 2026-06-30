@@ -8,6 +8,7 @@ Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
     Route::livewire('settings/profile', 'pages::settings.profile')->name('profile.edit');
+    Route::livewire('settings/organisation', 'pages::settings.organisation')->name('org.settings');
     Route::livewire('settings/connected-accounts', 'pages::settings.connected-accounts')->name('connected-accounts.edit');
     Route::livewire('settings/categories', 'pages::settings.categories')->name('categories.edit');
     Route::livewire('settings/billing', 'pages::settings.billing')->name('billing');

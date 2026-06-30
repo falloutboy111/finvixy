@@ -79,12 +79,21 @@ class SyncExpenseToDrive implements ShouldQueue
                 default => 'image/jpeg',
             };
 
-            // File into monthly subfolder (e.g. OrgName-finvixy/2026-04/vendor_2026-04-15.jpg)
-            $monthFolder = ($this->expense->date ?? now())->format('Y-m');
-
+            // Resolve the upload target:
+            //   root folder (picker ID → named → auto)
+            //   → optional custom path  (e.g. "v1/receipts")
+            //   → monthly subfolder     (e.g. "2026-06")
             $customFolderId = $account->settings['drive_folder_id'] ?? null;
+            $customPath     = $account->settings['drive_folder_path'] ?? null;
+            $monthFolder    = ($this->expense->date ?? now())->format('Y-m');
 
-            $result = $driveService->uploadFile($filename, $fileContents, $mimeType, $monthFolder, $customFolderId);
+            $rootFolderId  = $driveService->getOrCreateFolder($customFolderId);
+            $targetFolderId = $customPath
+                ? $driveService->navigatePath($rootFolderId, $customPath)
+                : $rootFolderId;
+            $targetFolderId = $driveService->navigatePath($targetFolderId, $monthFolder);
+
+            $result = $driveService->uploadFileToFolder($filename, $fileContents, $mimeType, $targetFolderId);
 
             $this->expense->update([
                 'drive_file_id' => $result['id'],

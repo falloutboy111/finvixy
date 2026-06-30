@@ -40,7 +40,12 @@ class GoogleDriveService
         }
 
         $this->service = new Drive($this->client);
-        $this->folderName = $this->sanitizeFolderName($organisationName).'-finvixy';
+
+        // Prefer a user-typed root folder name over the auto-generated one.
+        $rootName = $account->settings['drive_root_name'] ?? null;
+        $this->folderName = $rootName
+            ? $this->sanitizeFolderName($rootName)
+            : $this->sanitizeFolderName($organisationName).'-finvixy';
     }
 
     /**
@@ -244,6 +249,87 @@ class GoogleDriveService
             'subfolder_name' => $subfolderName,
             'subfolder_id' => $folder->id,
             'parent_folder_id' => $parentFolderId,
+        ]);
+
+        return $folder->id;
+    }
+
+    /**
+     * Walk a slash-delimited path (e.g. "v1/receipts") inside $parentId,
+     * creating any missing folder segments along the way.
+     * Returns the ID of the deepest folder.
+     */
+    public function navigatePath(string $parentId, string $path): string
+    {
+        $segments = array_filter(explode('/', $path), fn ($s) => $s !== '');
+
+        foreach ($segments as $segment) {
+            $parentId = $this->getOrCreateNamedFolder($this->sanitizeFolderName($segment), $parentId);
+        }
+
+        return $parentId;
+    }
+
+    /**
+     * Upload a file directly into a pre-resolved folder ID.
+     * Use this after navigatePath() resolves the target.
+     *
+     * @return array{id: string, webViewLink: string}
+     */
+    public function uploadFileToFolder(string $filename, string $content, string $mimeType, string $folderId): array
+    {
+        $fileMetadata = new DriveFile([
+            'name'    => $filename,
+            'parents' => [$folderId],
+        ]);
+
+        $file = $this->service->files->create($fileMetadata, [
+            'data'       => $content,
+            'mimeType'   => $mimeType,
+            'uploadType' => 'multipart',
+            'fields'     => 'id, name, webViewLink',
+        ]);
+
+        Log::info('Uploaded file to Google Drive', [
+            'filename'  => $filename,
+            'file_id'   => $file->id,
+            'web_link'  => $file->webViewLink,
+            'folder_id' => $folderId,
+        ]);
+
+        return [
+            'id'          => $file->id,
+            'webViewLink' => $file->webViewLink,
+        ];
+    }
+
+    /**
+     * Get or create a named folder directly inside a given parent.
+     */
+    private function getOrCreateNamedFolder(string $name, string $parentId): string
+    {
+        $escapedName = addslashes($name);
+
+        $response = $this->service->files->listFiles([
+            'q'      => "mimeType='application/vnd.google-apps.folder' and name='{$escapedName}' and '{$parentId}' in parents and trashed=false",
+            'spaces' => 'drive',
+            'fields' => 'files(id)',
+        ]);
+
+        if (count($response->files) > 0) {
+            return $response->files[0]->id;
+        }
+
+        $folder = $this->service->files->create(new DriveFile([
+            'name'     => $name,
+            'mimeType' => 'application/vnd.google-apps.folder',
+            'parents'  => [$parentId],
+        ]), ['fields' => 'id']);
+
+        Log::info('Created Google Drive folder', [
+            'name'      => $name,
+            'id'        => $folder->id,
+            'parent_id' => $parentId,
         ]);
 
         return $folder->id;
