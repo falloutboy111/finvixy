@@ -26,11 +26,6 @@ class SyncExpenseToCrm implements ShouldQueue
             return;
         }
 
-        // Idempotent — skip if already pushed
-        if ($expense->crm_expense_id !== null) {
-            return;
-        }
-
         $user = $expense->user;
 
         if (! $user || ! $user->crm_sync_enabled) {

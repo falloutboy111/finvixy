@@ -24,7 +24,9 @@ new #[Title('CRM')] #[Layout('layouts.app.sidebar')] class extends Component {
 
     public function updatedCrmSyncEnabled(bool $value): void
     {
-        Auth::user()->update(['crm_sync_enabled' => $value]);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->update(['crm_sync_enabled' => $value]);
         session()->flash('status', 'crm-saved');
     }
 
@@ -38,7 +40,6 @@ new #[Title('CRM')] #[Layout('layouts.app.sidebar')] class extends Component {
 
         Expense::where('user_id', $user->id)
             ->where('organisation_id', $user->organisation_id)
-            ->whereNull('crm_expense_id')
             ->whereIn('status', ['processed', 'approved'])
             ->each(fn ($expense) => SyncExpenseToCrm::dispatch($expense));
 

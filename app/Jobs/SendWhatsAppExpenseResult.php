@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Expense;
 use App\Services\AgentCoreService;
+use App\Services\ConfirmationService;
 use App\Services\WhatsAppService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -77,9 +78,25 @@ class SendWhatsAppExpenseResult implements ShouldQueue
 
             $whatsApp->sendMessage($to, implode("\n", $lines));
 
-            // Push receipt data into the agent session so the user can ask
-            // follow-up questions ("what did I just buy?", "is that a duplicate?").
-            $this->seedAgentSession($expense, $agentCore);
+            $user = $expense->user;
+
+            if ($user && $user->crm_sync_enabled) {
+                // Seed the agent session silently, then send a deterministic
+                // interactive project picker — no LLM round-trip needed here.
+                $this->seedAgentSession($expense, $agentCore);
+
+                try {
+                    app(ConfirmationService::class)->sendProactiveProjectPicker($expense, $to, $whatsApp);
+                } catch (\Throwable $e) {
+                    Log::warning('SendWhatsAppExpenseResult: project picker failed', [
+                        'expense_id' => $expense->id,
+                        'error'      => $e->getMessage(),
+                    ]);
+                }
+            } else {
+                // Standard seed — response discarded, just primes the session.
+                $this->seedAgentSession($expense, $agentCore);
+            }
 
         } elseif ($expense->status === 'failed') {
             $error = $fields['error'] ?? 'Unknown error';
@@ -109,6 +126,28 @@ class SendWhatsAppExpenseResult implements ShouldQueue
             return;
         }
 
+        try {
+            $agentCore->invoke(
+                implode("\n", $this->buildReceiptSeedLines($expense)),
+                $expense->organisation_id,
+                $user->id,
+            );
+
+            Log::info('Agent session seeded with receipt', [
+                'expense_id' => $expense->id,
+                'user_id'    => $user->id,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to seed agent session with receipt', [
+                'expense_id' => $expense->id,
+                'error'      => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /** @return list<string> */
+    private function buildReceiptSeedLines(Expense $expense): array
+    {
         $lines = [
             '[Receipt scanned] Your receipt has been processed:',
             'Store: '.$expense->name,
@@ -130,19 +169,6 @@ class SendWhatsAppExpenseResult implements ShouldQueue
             $lines[] = 'Note: possible duplicate of an existing expense.';
         }
 
-        try {
-            // Invoke the agent to seed the session; response is not forwarded to the user.
-            $agentCore->invoke(implode("\n", $lines), $expense->organisation_id, $user->id);
-
-            Log::info('Agent session seeded with receipt', [
-                'expense_id' => $expense->id,
-                'user_id'    => $user->id,
-            ]);
-        } catch (\Throwable $e) {
-            Log::warning('Failed to seed agent session with receipt', [
-                'expense_id' => $expense->id,
-                'error'      => $e->getMessage(),
-            ]);
-        }
+        return $lines;
     }
 }

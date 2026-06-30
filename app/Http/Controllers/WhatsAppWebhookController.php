@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Jobs\InvokeAgentJob;
 use App\Jobs\ProcessExpenseImage;
 use App\Models\Expense;
+use App\Models\PendingConfirmation;
 use App\Models\User;
 use App\Models\WhatsappWebhook;
+use App\Services\ConfirmationService;
 use App\Services\OrgStorageService;
 use App\Services\PlanLimitService;
 use App\Services\WhatsAppService;
@@ -315,6 +317,26 @@ class WhatsAppWebhookController extends Controller
 
         RateLimiter::hit($key, 3600);
 
+        // If the user previously tapped "Type a project name", route their text to
+        // the agent with enough context to identify the project and call set_expense_project.
+        $typeReply = PendingConfirmation::where('user_id', $user->id)
+            ->where('awaiting_type_reply', true)
+            ->where('expires_at', '>', now())
+            ->first();
+
+        $injectProjects = false;
+
+        if ($typeReply) {
+            $body = '[Project assignment] The user is replying to a project selection prompt.'
+                ." Expense #{$typeReply->expense_id} needs a project assigned."
+                ." Their message: \"{$body}\"."
+                .' Match the project by name and call set_expense_project to assign it.'
+                .' Confirm the assignment in a short reply.';
+
+            $injectProjects = true; // job will append the full project list before invoking
+            $typeReply->delete();
+        }
+
         // Offload to a queue so we return 200 to Meta within the webhook timeout.
         // The job invokes the agent and sends the reply in the background.
         InvokeAgentJob::dispatch(
@@ -323,6 +345,7 @@ class WhatsAppWebhookController extends Controller
             $user->organisation_id,
             $user->id,
             $webhook->id,
+            $injectProjects,
         );
 
         Log::info('WhatsApp text message queued for agent', [
@@ -338,19 +361,8 @@ class WhatsAppWebhookController extends Controller
 
     /**
      * Handle button_reply and list_reply messages from the category/project confirmation flow.
-     *
-     * TODO: implement the state machine here.
-     * The reply 'id' encodes the intent, e.g. "category:meals" or "project:acme".
-     * Parse it, call the appropriate AgentToolService method (e.g. updateExpenseCategory),
-     * then send a short acknowledgement back with sendText().
-     *
-     * Example skeleton:
-     *   if (str_starts_with($replyId, 'category:')) {
-     *       $category = substr($replyId, 9);
-     *       // retrieve pending expense_id from a cache key keyed on $user->id
-     *       $agentTool->updateExpenseCategory($orgId, $userId, $expenseId, $category);
-     *       $this->whatsApp->sendText($from, "Updated category to {$category}.");
-     *   }
+     * Reply IDs are structured: `cat:<expense_id>:<slug>`, `proj:<expense_id>:<uuid_or_special>`.
+     * All routing is deterministic — no LLM involved.
      */
     protected function handleInteractiveReply(
         array $message,
@@ -361,17 +373,25 @@ class WhatsAppWebhookController extends Controller
         $interactive = $message['interactive'] ?? [];
         $replyType   = $interactive['type'] ?? null; // 'button_reply' | 'list_reply'
         $replyId     = $interactive[$replyType]['id'] ?? null;
-        $replyTitle  = $interactive[$replyType]['title'] ?? '';
 
         Log::info('WhatsApp interactive reply received', [
-            'from'        => $from,
-            'user_id'     => $user->id,
-            'reply_type'  => $replyType,
-            'reply_id'    => $replyId,
-            'reply_title' => $replyTitle,
+            'from'       => $from,
+            'user_id'    => $user->id,
+            'reply_type' => $replyType,
+            'reply_id'   => $replyId,
         ]);
 
-        // TODO: route $replyId to AgentToolService calls (see docblock above)
+        if (! $replyId) {
+            $webhook->update(['status' => 'ignored']);
+            return;
+        }
+
+        $ack = app(ConfirmationService::class)->handleInteractiveTap($replyId, $user, $this->whatsApp, $from);
+
+        // __more__ returns '' — the list was already sent; don't send an extra text ack
+        if ($ack !== '') {
+            $this->whatsApp->sendText($from, $ack);
+        }
 
         $webhook->update(['status' => 'processed']);
     }

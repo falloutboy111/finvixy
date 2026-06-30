@@ -36,15 +36,26 @@ class EnclivixCrmService
      */
     public function postExpense(Expense $expense): string
     {
+        $items = $expense->expenseItems()
+            ->get(['name', 'qty', 'price', 'total'])
+            ->map(fn ($i) => [
+                'name'  => $i->name,
+                'qty'   => (float) $i->qty,
+                'price' => (float) $i->price,
+                'total' => (float) $i->total,
+            ])
+            ->all();
+
         $response = $this->http()->post('/api/v1/expenses', [
             'external_id' => (string) $expense->id,
-            'project_id'  => null,
+            'project_id'  => $expense->crm_project_id ?: null,
             'receipt_url' => $expense->drive_web_link,
-            'store'       => $expense->name,
+            'store'       => $expense->name ?? 'Unknown',
             'total'       => (float) $expense->amount,
             'currency'    => $expense->organisation?->currency ?? 'ZAR',
-            'date'        => $expense->date?->toDateString(),
-            'category'    => $expense->category,
+            'date'        => $expense->date?->toDateString() ?? now()->toDateString(),
+            'category'    => $expense->category ?? 'Other',
+            'items'       => $items,
         ]);
 
         if (! $response->successful()) {
@@ -63,7 +74,7 @@ class EnclivixCrmService
     /**
      * Update the project assignment for an already-synced expense.
      */
-    public function patchExpenseProject(string $crmExpenseId, ?int $projectId): void
+    public function patchExpenseProject(string $crmExpenseId, ?string $projectId): void
     {
         $response = $this->http()->patch("/api/v1/expenses/{$crmExpenseId}", [
             'project_id' => $projectId,

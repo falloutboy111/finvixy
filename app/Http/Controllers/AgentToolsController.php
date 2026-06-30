@@ -116,7 +116,7 @@ class AgentToolsController extends Controller
             'set_expense_project' => $this->service->setExpenseProject(
                 $orgId, $userId,
                 (int) $this->require($p, 'expense_id'),
-                isset($p['project_id']) ? (int) $p['project_id'] : null,
+                isset($p['project_id']) ? (string) $p['project_id'] : null,
             ),
         };
     }

@@ -208,8 +208,9 @@ class ProcessExpenseImage implements ShouldQueue
         // Auto-sync to Google Drive if connected
         SyncExpenseToDrive::dispatch($this->expense);
 
-        // Push to Enclivix CRM if enabled for this user
-        SyncExpenseToCrm::dispatch($this->expense);
+        // Push to Enclivix CRM if enabled for this user — delayed so Drive sync
+        // can populate drive_web_link before this job fires.
+        SyncExpenseToCrm::dispatch($this->expense)->delay(now()->addSeconds(45));
 
         // Notify via WhatsApp if the receipt came from WhatsApp
         SendWhatsAppExpenseResult::dispatch($this->expense->fresh());

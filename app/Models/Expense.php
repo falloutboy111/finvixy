@@ -49,7 +49,6 @@ class Expense extends Model
             'extracted_data' => 'array',
             'is_duplicate'  => 'boolean',
             'crm_synced_at' => 'datetime',
-            'crm_project_id' => 'integer',
         ];
     }
 

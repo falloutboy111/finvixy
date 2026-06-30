@@ -2,8 +2,11 @@
 
 namespace App\Jobs;
 
+use App\Models\User;
 use App\Models\WhatsappWebhook;
 use App\Services\AgentCoreService;
+use App\Services\AgentToolService;
+use App\Services\ConfirmationService;
 use App\Services\WhatsAppService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -25,6 +28,7 @@ class InvokeAgentJob implements ShouldQueue
         public readonly int $orgId,
         public readonly int $userId,
         public readonly int $webhookId,
+        public readonly bool $injectFullProjectList = false,
     ) {
         $this->onQueue('agent');
     }
@@ -39,9 +43,20 @@ class InvokeAgentJob implements ShouldQueue
         }
 
         try {
-            $reply = $agent->invoke($this->prompt, $this->orgId, $this->userId);
+            $prompt = $this->injectFullProjectList
+                ? $this->withProjectList($this->prompt)
+                : $this->prompt;
 
-            $whatsApp->sendText($this->to, $reply);
+            $reply = $agent->invoke($prompt, $this->orgId, $this->userId);
+
+            $confirmation = app(ConfirmationService::class);
+            $action       = $confirmation->parseAction($reply);
+
+            if ($action !== null) {
+                $confirmation->sendActionMessage($this->to, $action, $whatsApp);
+            } else {
+                $whatsApp->sendText($this->to, $reply);
+            }
 
             $webhook?->update(['status' => 'processed']);
         } catch (\Throwable $e) {
@@ -63,5 +78,41 @@ class InvokeAgentJob implements ShouldQueue
 
             throw $e;
         }
+    }
+
+    /**
+     * Append the user's full CRM project list to the prompt so the agent can match
+     * a typed project name without needing an extra get_projects tool call.
+     * Falls back silently to the original prompt if the CRM is unavailable.
+     */
+    private function withProjectList(string $prompt): string
+    {
+        $user = User::find($this->userId);
+
+        if (! $user?->crm_sync_enabled) {
+            return $prompt;
+        }
+
+        try {
+            $projects = app(AgentToolService::class)->allProjects($this->userId);
+        } catch (\Throwable $e) {
+            Log::warning('InvokeAgentJob: project list fetch failed — agent will call get_projects', [
+                'user_id' => $this->userId,
+                'error'   => $e->getMessage(),
+            ]);
+
+            return $prompt;
+        }
+
+        if (empty($projects)) {
+            return $prompt;
+        }
+
+        $list = implode('; ', array_map(
+            fn ($p) => "{$p['name']} (id:{$p['id']})",
+            $projects,
+        ));
+
+        return $prompt." All available projects: {$list}.";
     }
 }

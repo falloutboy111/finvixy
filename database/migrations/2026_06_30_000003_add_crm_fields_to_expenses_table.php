@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::table('expenses', function (Blueprint $table) {
             $table->string('crm_expense_id')->nullable()->after('duplicate_of');
             $table->timestamp('crm_synced_at')->nullable()->after('crm_expense_id');
-            $table->unsignedBigInteger('crm_project_id')->nullable()->after('crm_synced_at');
+            $table->string('crm_project_id', 36)->nullable()->after('crm_synced_at');
         });
     }
 

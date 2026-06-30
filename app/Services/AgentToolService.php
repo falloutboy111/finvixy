@@ -515,21 +515,89 @@ class AgentToolService
             return ['projects' => [], 'note' => 'CRM sync is not enabled for this account.'];
         }
 
+        // Full list — the agent must reason over every project, not a picker-capped slice.
+        return ['projects' => $this->allProjects($userId)];
+    }
+
+    /**
+     * Every CRM project for this user in stable order (recently-used first, then A→Z).
+     * No cap — for agent matching paths that must see the complete list.
+     *
+     * @return list<array{id: string, name: string}>
+     */
+    public function allProjects(int $userId): array
+    {
+        return $this->sortedProjects($userId);
+    }
+
+    /**
+     * Fetch CRM projects filtered and sorted by recent use in Finvixy (last 90 days).
+     * Capped to $cap — used by the WhatsApp picker (not the agent).
+     *
+     * @return list<array{id: string, name: string}>
+     */
+    public function filteredProjects(int $userId, int $cap = 10): array
+    {
+        return array_slice($this->sortedProjects($userId), 0, $cap);
+    }
+
+    /**
+     * Return a stable-ordered page slice plus the total for paginated pickers.
+     * Order: recently-used crm_project_id (last 90 days) first, then alphabetical.
+     * Wraps `$offset` to 0 if it has gone past the end of the list.
+     *
+     * @return array{projects: list<array{id: string, name: string}>, total: int}
+     */
+    public function paginatedProjects(int $userId, int $perPage = 7, int $offset = 0): array
+    {
+        $all   = $this->sortedProjects($userId);
+        $total = count($all);
+
+        if ($total > 0 && $offset >= $total) {
+            $offset = 0;
+        }
+
+        return [
+            'projects' => array_values(array_slice($all, $offset, $perPage)),
+            'total'    => $total,
+        ];
+    }
+
+    /**
+     * Fetch all CRM projects in stable order: recently-used first, then A→Z.
+     * Both `filteredProjects` (tool 12) and `paginatedProjects` (picker) share this ordering.
+     *
+     * @return list<array{id: string, name: string}>
+     */
+    private function sortedProjects(int $userId): array
+    {
         $raw = app(EnclivixCrmService::class)->getProjects();
 
-        $projects = array_map(fn ($p) => [
-            'id'   => $p['id'],
-            'name' => (string) ($p['name'] ?? ''),
-        ], $raw);
+        $recentIds = Expense::where('user_id', $userId)
+            ->whereNotNull('crm_project_id')
+            ->where('date', '>=', now()->subDays(90)->toDateString())
+            ->pluck('crm_project_id')
+            ->unique()
+            ->flip()
+            ->toArray();
 
-        return ['projects' => $projects];
+        return collect($raw)
+            ->map(fn ($p) => [
+                'id'     => (string) ($p['id'] ?? ''),
+                'name'   => (string) ($p['name'] ?? ''),
+                'recent' => isset($recentIds[(string) ($p['id'] ?? '')]),
+            ])
+            ->sortBy([['recent', 'desc'], ['name', 'asc']])
+            ->map(fn ($p) => ['id' => $p['id'], 'name' => $p['name']])
+            ->values()
+            ->all();
     }
 
     // -------------------------------------------------------------------------
     // Tool 13 — set_expense_project: assign an expense to a CRM project
     // -------------------------------------------------------------------------
 
-    public function setExpenseProject(int $orgId, int $userId, int $expenseId, ?int $projectId): array
+    public function setExpenseProject(int $orgId, int $userId, int $expenseId, ?string $projectId): array
     {
         $expense = Expense::where('organisation_id', $orgId)
             ->where('user_id', $userId)

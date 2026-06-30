@@ -23,7 +23,8 @@ class AgentCoreService
     public function invoke(string $prompt, int $orgId, int $userId): string
     {
         $startTime = microtime(true);
-        $sessionId = 'wa-'.$userId;
+        $bucket    = (int) floor(now()->timestamp / 600); // rolls over every 10 minutes
+        $sessionId = 'wa-'.$userId.'-'.$bucket;
         $payload   = [
             'organisation_id' => (string) $orgId,
             'user_id'         => (string) $userId,
