@@ -68,16 +68,19 @@ class AgentToolsController extends Controller
             'get_spending_by_category' => $this->service->getSpendingByCategory(
                 $orgId, $userId,
                 $this->require($p, 'category'),
-                $this->require($p, 'period'),
+                isset($p['start_date']) ? (string) $p['start_date'] : null,
+                isset($p['end_date'])   ? (string) $p['end_date']   : null,
             ),
             'get_spending_by_item' => $this->service->getSpendingByItem(
                 $orgId, $userId,
                 $this->require($p, 'item_keyword'),
-                $this->require($p, 'period'),
+                isset($p['start_date']) ? (string) $p['start_date'] : null,
+                isset($p['end_date'])   ? (string) $p['end_date']   : null,
             ),
             'get_total_spending' => $this->service->getTotalSpending(
                 $orgId, $userId,
-                $this->require($p, 'period'),
+                isset($p['start_date']) ? (string) $p['start_date'] : null,
+                isset($p['end_date'])   ? (string) $p['end_date']   : null,
             ),
             'list_categories'      => $this->service->listCategories($orgId, $userId),
             'list_recent_expenses' => $this->service->listRecentExpenses(
@@ -96,12 +99,14 @@ class AgentToolsController extends Controller
             'search_items' => $this->service->searchItems(
                 $orgId, $userId,
                 $this->require($p, 'keyword'),
-                $p['period'] ?? 'all_time',
+                isset($p['start_date']) ? (string) $p['start_date'] : null,
+                isset($p['end_date'])   ? (string) $p['end_date']   : null,
             ),
             'sum_items' => $this->service->sumItems(
                 $orgId, $userId,
                 (array) $this->require($p, 'item_names'),
-                $p['period'] ?? 'all_time',
+                isset($p['start_date']) ? (string) $p['start_date'] : null,
+                isset($p['end_date'])   ? (string) $p['end_date']   : null,
             ),
             'get_expense_items' => $this->service->getExpenseItems(
                 $orgId, $userId,

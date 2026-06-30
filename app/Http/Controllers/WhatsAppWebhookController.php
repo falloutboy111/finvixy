@@ -346,6 +346,7 @@ class WhatsAppWebhookController extends Controller
             $user->id,
             $webhook->id,
             $injectProjects,
+            $injectProjects, // holding message when project list injected (extra CRM round-trip)
         );
 
         Log::info('WhatsApp text message queued for agent', [

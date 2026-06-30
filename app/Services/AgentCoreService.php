@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\AgentConversation;
 use App\Models\AiUsageLog;
 use Aws\BedrockAgentCore\BedrockAgentCoreClient;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AgentCoreService
 {
@@ -14,29 +16,37 @@ class AgentCoreService
     /**
      * Invoke the AgentCore runtime and return the agent's reply text.
      *
-     * Dispatches to the local dev server or the deployed prod runtime depending
-     * on AGENTCORE_MODE. Both paths return the same {"reply","usage"} envelope.
+     * Every call gets a fresh Python session ID so the agent never accumulates
+     * conversation history server-side. Instead, Laravel manages a windowed
+     * history that is prepended to the prompt before each invocation — giving
+     * the agent context without unbounded token growth.
      *
-     * organisation_id and user_id are resolved by the Laravel webhook from the
-     * verified sender phone — never trust these from the WhatsApp message content.
+     * @param  ?int  $expenseId  When set, both turns are stored as pinned so
+     *                           they survive the idle-reset window (receipt follow-ups).
+     * @param  bool  $isPinned   Callers that seed a receipt context pass true.
      */
-    public function invoke(string $prompt, int $orgId, int $userId): string
-    {
+    public function invoke(
+        string $prompt,
+        int $orgId,
+        int $userId,
+        ?int $expenseId = null,
+        bool $isPinned = false,
+    ): string {
         $startTime = microtime(true);
-        $bucket    = (int) floor(now()->timestamp / 600); // rolls over every 10 minutes
-        $sessionId = str_pad('wa-'.$userId.'-'.$bucket, 33, '0'); // AgentCore requires >= 33 chars
-        $payload   = [
+        $sessionId = $this->freshSessionId($userId);
+
+        $agentPrompt = $this->buildWindowedPrompt($prompt, $userId);
+
+        $payload = [
             'organisation_id' => (string) $orgId,
             'user_id'         => (string) $userId,
             'session_id'      => $sessionId,
-            'prompt'          => $prompt,
+            'prompt'          => $agentPrompt,
         ];
 
         try {
             $rawBody = $this->sendRequest($sessionId, $payload);
 
-            // Response envelope: {"reply":"<text>","usage":{input_tokens,output_tokens,
-            // cache_read_input_tokens,cache_write_input_tokens}}
             $decoded = json_decode($rawBody, true);
             $text    = is_array($decoded) && isset($decoded['reply'])
                 ? trim((string) $decoded['reply'])
@@ -53,6 +63,11 @@ class AgentCoreService
                 'output_tokens' => $usage['output_tokens'] ?? null,
             ]);
 
+            // Store both turns with the RAW prompt (not the augmented version),
+            // so rebuilt windows stay clean with no nested history.
+            $this->storeMessage($userId, $orgId, 'user',      $prompt, $isPinned, $expenseId);
+            $this->storeMessage($userId, $orgId, 'assistant', $text,   $isPinned, $expenseId);
+
             $this->logUsage($startTime, $orgId, $userId, true, null, $usage);
 
             return $text ?: "Sorry, I couldn't process that right now. Please try again.";
@@ -61,6 +76,104 @@ class AgentCoreService
         } catch (\Throwable $e) {
             $this->logUsage($startTime, $orgId, $userId, false, $e->getMessage());
             throw $e;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Session ID — one unique ID per call keeps the agent stateless (Python)
+    // -------------------------------------------------------------------------
+
+    private function freshSessionId(int $userId): string
+    {
+        // Strip hyphens from UUID to keep the ID compact; pad to the ≥33 char minimum.
+        $unique = str_replace('-', '', (string) Str::uuid());
+
+        return str_pad('wa-'.$userId.'-'.$unique, 33, '0');
+    }
+
+    // -------------------------------------------------------------------------
+    // Windowed history — Task 1 / Task 3
+    // -------------------------------------------------------------------------
+
+    /**
+     * Prepend the last N turns from the conversation history to $prompt.
+     *
+     * Rules:
+     *  - If there has been no activity for > AGENT_SESSION_IDLE_RESET hours,
+     *    the window is empty (fresh start).
+     *  - Pinned messages (receipt seeds) are fetched back an extra 24 h so a
+     *    receipt context is still present even if the user was slow to reply.
+     *  - Last AGENT_HISTORY_TURNS turn-pairs (user+assistant) fill the window.
+     */
+    private function buildWindowedPrompt(string $prompt, int $userId): string
+    {
+        $turns     = (int) config('services.agentcore.history_turns', 8);
+        $idleHours = (int) config('services.agentcore.idle_reset_hours', 2);
+        $idleCutoff = now()->subHours($idleHours);
+
+        // Idle-reset check: if the most recent message is older than the idle
+        // threshold, start fresh — stale context shouldn't ride along.
+        $lastAt = AgentConversation::where('user_id', $userId)
+            ->latest('created_at')
+            ->value('created_at');
+
+        if (! $lastAt || $lastAt < $idleCutoff) {
+            return $prompt;
+        }
+
+        // Fetch recent unpinned messages within the idle window, plus any
+        // pinned messages within the last 24 h (to capture receipt seeds).
+        $pinnedCutoff = now()->subHours(24);
+
+        $history = AgentConversation::where('user_id', $userId)
+            ->where(function ($q) use ($idleCutoff, $pinnedCutoff) {
+                $q->where(function ($q2) use ($pinnedCutoff) {
+                    $q2->where('is_pinned', true)
+                       ->where('created_at', '>=', $pinnedCutoff);
+                })->orWhere('created_at', '>=', $idleCutoff);
+            })
+            ->orderBy('created_at', 'desc')
+            ->limit($turns * 2)
+            ->get()
+            ->sortBy('created_at')
+            ->values();
+
+        if ($history->isEmpty()) {
+            return $prompt;
+        }
+
+        $formatted = $history->map(fn ($m) =>
+            ($m->role === 'user' ? 'User' : 'Assistant').': '.rtrim($m->content)
+        )->join("\n");
+
+        return "[Conversation history]\n{$formatted}\n\n{$prompt}";
+    }
+
+    // -------------------------------------------------------------------------
+    // Conversation storage
+    // -------------------------------------------------------------------------
+
+    private function storeMessage(
+        int $userId,
+        int $orgId,
+        string $role,
+        string $content,
+        bool $isPinned,
+        ?int $expenseId,
+    ): void {
+        try {
+            AgentConversation::create([
+                'user_id'         => $userId,
+                'organisation_id' => $orgId,
+                'role'            => $role,
+                'content'         => $content,
+                'is_pinned'       => $isPinned,
+                'expense_id'      => $expenseId,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('AgentCoreService: failed to store conversation message', [
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -115,8 +228,6 @@ class AgentCoreService
             'version' => 'latest',
         ];
 
-        // Use explicit credentials when configured; otherwise fall through to
-        // the SDK's default provider chain (IAM role, env vars, etc.).
         $key = config('services.aws.key');
         if ($key) {
             $clientConfig['credentials'] = [

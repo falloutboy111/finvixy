@@ -14,34 +14,38 @@ use Illuminate\Support\Facades\Log;
 
 class AgentToolService
 {
-    private const VALID_PERIODS = ['this_month', 'last_month', 'this_year', 'all_time'];
-
     private const SPENDING_STATUSES = ['processed', 'approved'];
+
+    private const DATE_TZ = 'Africa/Johannesburg';
 
     // -------------------------------------------------------------------------
     // Tool 1
     // -------------------------------------------------------------------------
 
-    public function getSpendingByCategory(int $orgId, int $userId, string $category, string $period): array
-    {
-        $this->assertPeriod($period);
-        [$from, $to] = $this->dateRange($period);
+    public function getSpendingByCategory(
+        int $orgId,
+        int $userId,
+        string $category,
+        ?string $startDate = null,
+        ?string $endDate = null,
+    ): array {
+        [$from, $to] = $this->parseDateRange($startDate, $endDate);
 
         $query = Expense::where('organisation_id', $orgId)
             ->where('user_id', $userId)
             ->where('category', $category)
             ->whereIn('status', self::SPENDING_STATUSES);
 
-        if ($from) {
-            $query->whereBetween('date', [$from, $to]);
-        }
+        $this->applyDateFilter($query, 'date', $from, $to);
 
         $row = $query->selectRaw('SUM(amount) as total, COUNT(*) as count')->first();
 
         return [
-            'total'    => (float) ($row->total ?? 0),
-            'currency' => 'ZAR',
-            'count'    => (int) ($row->count ?? 0),
+            'total'      => (float) ($row->total ?? 0),
+            'currency'   => 'ZAR',
+            'count'      => (int) ($row->count ?? 0),
+            'start_date' => $from,
+            'end_date'   => $to,
         ];
     }
 
@@ -49,10 +53,14 @@ class AgentToolService
     // Tool 2
     // -------------------------------------------------------------------------
 
-    public function getSpendingByItem(int $orgId, int $userId, string $itemKeyword, string $period): array
-    {
-        $this->assertPeriod($period);
-        [$from, $to] = $this->dateRange($period);
+    public function getSpendingByItem(
+        int $orgId,
+        int $userId,
+        string $itemKeyword,
+        ?string $startDate = null,
+        ?string $endDate = null,
+    ): array {
+        [$from, $to] = $this->parseDateRange($startDate, $endDate);
 
         // SoftDeletes on ExpenseItem adds whereNull('expense_items.deleted_at') globally.
         // The joined expenses table needs its own explicit deleted_at guard.
@@ -64,16 +72,15 @@ class AgentToolService
             ->whereIn('expenses.status', self::SPENDING_STATUSES)
             ->whereNull('expenses.deleted_at');
 
-        if ($from) {
-            $query->whereBetween('expenses.date', [$from, $to]);
-        }
+        $this->applyDateFilter($query, 'expenses.date', $from, $to);
 
         $row = $query->selectRaw('SUM(expense_items.total) as total, COUNT(*) as count')->first();
 
         return [
-            'total'  => (float) ($row->total ?? 0),
-            'count'  => (int) ($row->count ?? 0),
-            'period' => $period,
+            'total'      => (float) ($row->total ?? 0),
+            'count'      => (int) ($row->count ?? 0),
+            'start_date' => $from,
+            'end_date'   => $to,
         ];
     }
 
@@ -81,10 +88,14 @@ class AgentToolService
     // Tool 8 — search_items: candidate discovery (agent reasons over results)
     // -------------------------------------------------------------------------
 
-    public function searchItems(int $orgId, int $userId, string $keyword, string $period): array
-    {
-        $this->assertPeriod($period);
-        [$from, $to] = $this->dateRange($period);
+    public function searchItems(
+        int $orgId,
+        int $userId,
+        string $keyword,
+        ?string $startDate = null,
+        ?string $endDate = null,
+    ): array {
+        [$from, $to] = $this->parseDateRange($startDate, $endDate);
 
         $toRow = fn ($r) => [
             'name'  => $r->name,
@@ -101,9 +112,7 @@ class AgentToolService
             ->whereNull('expenses.deleted_at')
             ->where('expense_items.name', 'like', '%'.trim($keyword).'%');
 
-        if ($from) {
-            $exactQuery->whereBetween('expenses.date', [$from, $to]);
-        }
+        $this->applyDateFilter($exactQuery, 'expenses.date', $from, $to);
 
         $exact = $exactQuery
             ->selectRaw('expense_items.name, SUM(expense_items.total) as total, COUNT(*) as count')
@@ -127,9 +136,7 @@ class AgentToolService
             ->whereIn('expenses.status', self::SPENDING_STATUSES)
             ->whereNull('expenses.deleted_at');
 
-        if ($from) {
-            $broadQuery->whereBetween('expenses.date', [$from, $to]);
-        }
+        $this->applyDateFilter($broadQuery, 'expenses.date', $from, $to);
 
         return $broadQuery
             ->selectRaw('expense_items.name, SUM(expense_items.total) as total, COUNT(*) as count')
@@ -145,10 +152,14 @@ class AgentToolService
     // Tool 9 — sum_items: SQL-computed total over agent-selected item names
     // -------------------------------------------------------------------------
 
-    public function sumItems(int $orgId, int $userId, array $itemNames, string $period): array
-    {
-        $this->assertPeriod($period);
-        [$from, $to] = $this->dateRange($period);
+    public function sumItems(
+        int $orgId,
+        int $userId,
+        array $itemNames,
+        ?string $startDate = null,
+        ?string $endDate = null,
+    ): array {
+        [$from, $to] = $this->parseDateRange($startDate, $endDate);
 
         if (empty($itemNames)) {
             throw new \InvalidArgumentException('item_names must be a non-empty array.');
@@ -165,17 +176,16 @@ class AgentToolService
             ->whereNull('expenses.deleted_at')
             ->whereIn('expense_items.name', $itemNames);
 
-        if ($from) {
-            $query->whereBetween('expenses.date', [$from, $to]);
-        }
+        $this->applyDateFilter($query, 'expenses.date', $from, $to);
 
         $row = $query->selectRaw('SUM(expense_items.total) as total, COUNT(*) as count')->first();
 
         return [
-            'total'  => (float) ($row->total ?? 0),
-            'count'  => (int) ($row->count ?? 0),
-            'items'  => $itemNames,
-            'period' => $period,
+            'total'      => (float) ($row->total ?? 0),
+            'count'      => (int) ($row->count ?? 0),
+            'items'      => $itemNames,
+            'start_date' => $from,
+            'end_date'   => $to,
         ];
     }
 
@@ -183,25 +193,27 @@ class AgentToolService
     // Tool 3
     // -------------------------------------------------------------------------
 
-    public function getTotalSpending(int $orgId, int $userId, string $period): array
-    {
-        $this->assertPeriod($period);
-        [$from, $to] = $this->dateRange($period);
+    public function getTotalSpending(
+        int $orgId,
+        int $userId,
+        ?string $startDate = null,
+        ?string $endDate = null,
+    ): array {
+        [$from, $to] = $this->parseDateRange($startDate, $endDate);
 
         $query = Expense::where('organisation_id', $orgId)
             ->where('user_id', $userId)
             ->whereIn('status', self::SPENDING_STATUSES);
 
-        if ($from) {
-            $query->whereBetween('date', [$from, $to]);
-        }
+        $this->applyDateFilter($query, 'date', $from, $to);
 
         $row = $query->selectRaw('SUM(amount) as total, COUNT(*) as count')->first();
 
         return [
-            'total'  => (float) ($row->total ?? 0),
-            'count'  => (int) ($row->count ?? 0),
-            'period' => $period,
+            'total'      => (float) ($row->total ?? 0),
+            'count'      => (int) ($row->count ?? 0),
+            'start_date' => $from,
+            'end_date'   => $to,
         ];
     }
 
@@ -624,32 +636,67 @@ class AgentToolService
     // Helpers
     // -------------------------------------------------------------------------
 
-    private function assertPeriod(string $period): void
+    /**
+     * Validate and normalise start/end date strings.
+     *
+     * Rules:
+     *  - Both null → all-time (no filter).
+     *  - Either value must be a real YYYY-MM-DD date; throws on malformed input
+     *    so the agent can relay a clean error rather than crashing.
+     *  - end_date is capped to today (Africa/Johannesburg) to prevent future ranges.
+     *
+     * @return array{string|null, string|null}
+     */
+    private function parseDateRange(?string $startDate, ?string $endDate): array
     {
-        if (! in_array($period, self::VALID_PERIODS, true)) {
-            throw new \InvalidArgumentException(
-                "Invalid period '{$period}'. Must be one of: ".implode(', ', self::VALID_PERIODS).'.'
-            );
+        $today = Carbon::now(self::DATE_TZ)->toDateString();
+
+        if ($startDate !== null) {
+            if (! $this->isValidDate($startDate)) {
+                throw new \InvalidArgumentException(
+                    "start_date must be a valid date in YYYY-MM-DD format, got: '{$startDate}'."
+                );
+            }
         }
+
+        if ($endDate !== null) {
+            if (! $this->isValidDate($endDate)) {
+                throw new \InvalidArgumentException(
+                    "end_date must be a valid date in YYYY-MM-DD format, got: '{$endDate}'."
+                );
+            }
+
+            if ($endDate > $today) {
+                $endDate = $today;
+            }
+        }
+
+        return [$startDate, $endDate];
     }
 
-    /** @return array{string|null, string|null} */
-    private function dateRange(string $period): array
+    private function isValidDate(string $value): bool
     {
-        return match ($period) {
-            'this_month' => [
-                Carbon::now()->startOfMonth()->toDateString(),
-                Carbon::now()->endOfMonth()->toDateString(),
-            ],
-            'last_month' => [
-                Carbon::now()->subMonthNoOverflow()->startOfMonth()->toDateString(),
-                Carbon::now()->subMonthNoOverflow()->endOfMonth()->toDateString(),
-            ],
-            'this_year' => [
-                Carbon::now()->startOfYear()->toDateString(),
-                Carbon::now()->endOfYear()->toDateString(),
-            ],
-            'all_time' => [null, null],
-        };
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            return false;
+        }
+
+        [$y, $m, $d] = explode('-', $value);
+
+        return checkdate((int) $m, (int) $d, (int) $y);
+    }
+
+    /**
+     * Apply an open-ended date filter to a query builder.
+     * Both null → no filter; one null → open on that side.
+     */
+    private function applyDateFilter(\Illuminate\Database\Eloquent\Builder $query, string $column, ?string $from, ?string $to): void
+    {
+        if ($from !== null && $to !== null) {
+            $query->whereBetween($column, [$from, $to]);
+        } elseif ($from !== null) {
+            $query->where($column, '>=', $from);
+        } elseif ($to !== null) {
+            $query->where($column, '<=', $to);
+        }
     }
 }

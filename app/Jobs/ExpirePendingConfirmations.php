@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\AgentConversation;
 use App\Models\PendingConfirmation;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -16,5 +17,9 @@ class ExpirePendingConfirmations implements ShouldQueue
         $deleted = PendingConfirmation::where('expires_at', '<', now())->delete();
 
         Log::info('ExpirePendingConfirmations: removed expired rows', ['count' => $deleted]);
+
+        $pruned = AgentConversation::where('created_at', '<', now()->subDays(7))->delete();
+
+        Log::info('ExpirePendingConfirmations: pruned old conversation history', ['count' => $pruned]);
     }
 }

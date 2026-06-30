@@ -66,11 +66,12 @@ return [
     */
 
     'whatsapp' => [
-        'access_token'    => env('WHATSAPP_ACCESS_TOKEN'),
-        'verify_token'    => env('WHATSAPP_VERIFY_TOKEN'),
-        'app_secret'      => env('WHATSAPP_APP_SECRET'),
-        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
-        'api_version'     => env('WHATSAPP_API_VERSION', 'v21.0'),
+        'access_token'      => env('WHATSAPP_ACCESS_TOKEN'),
+        'verify_token'      => env('WHATSAPP_VERIFY_TOKEN'),
+        'app_secret'        => env('WHATSAPP_APP_SECRET'),
+        'phone_number_id'   => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'api_version'       => env('WHATSAPP_API_VERSION', 'v21.0'),
+        'typing_indicator'  => env('WHATSAPP_TYPING_INDICATOR_ENABLED', true),
     ],
 
     /*
@@ -126,10 +127,12 @@ return [
     */
 
     'agentcore' => [
-        'mode'        => env('AGENTCORE_MODE', 'local'),
-        'endpoint'    => env('AGENTCORE_ENDPOINT', 'http://127.0.0.1:8081'),
-        'runtime_arn' => env('AGENTCORE_RUNTIME_ARN'),
-        'region'      => env('AGENTCORE_REGION', 'eu-central-1'),
+        'mode'             => env('AGENTCORE_MODE', 'local'),
+        'endpoint'         => env('AGENTCORE_ENDPOINT', 'http://127.0.0.1:8081'),
+        'runtime_arn'      => env('AGENTCORE_RUNTIME_ARN'),
+        'region'           => env('AGENTCORE_REGION', 'eu-central-1'),
+        'history_turns'    => (int) env('AGENT_HISTORY_TURNS', 8),
+        'idle_reset_hours' => (int) env('AGENT_SESSION_IDLE_RESET', 2),
     ],
 
     /*

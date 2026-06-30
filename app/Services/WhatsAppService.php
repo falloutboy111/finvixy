@@ -219,6 +219,43 @@ class WhatsAppService
     }
 
     /**
+     * Send a combined read-receipt + typing indicator for an inbound message.
+     *
+     * Uses a 3-second timeout and swallows all exceptions — a failed indicator
+     * must never block or delay the actual agent reply. The indicator
+     * auto-expires after ~25 seconds or is dismissed when the real reply arrives.
+     */
+    public function sendTypingIndicator(string $to, string $messageId): void
+    {
+        if (! config('services.whatsapp.typing_indicator', true)) {
+            return;
+        }
+
+        try {
+            $response = Http::timeout(3)
+                ->withToken($this->accessToken)
+                ->post($this->apiUrl('messages'), [
+                    'messaging_product' => 'whatsapp',
+                    'status'            => 'read',
+                    'message_id'        => $messageId,
+                    'typing_indicator'  => ['type' => 'text'],
+                ]);
+
+            if (! $response->successful()) {
+                Log::warning('WhatsApp typing indicator failed', [
+                    'to'     => $to,
+                    'status' => $response->status(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('WhatsApp typing indicator exception', [
+                'to'    => $to,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Resolve a file extension from a MIME type.
      */
     public function extensionFromMime(string $mimeType): string

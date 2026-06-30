@@ -131,6 +131,8 @@ class SendWhatsAppExpenseResult implements ShouldQueue
                 implode("\n", $this->buildReceiptSeedLines($expense)),
                 $expense->organisation_id,
                 $user->id,
+                $expense->id,
+                true, // pin so follow-up questions have receipt context
             );
 
             Log::info('Agent session seeded with receipt', [
