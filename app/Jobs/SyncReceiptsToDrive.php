@@ -19,18 +19,18 @@ class SyncReceiptsToDrive implements ShouldQueue
     public int $timeout = 600;
 
     /**
-     * Create a new job instance.
+     * @param  bool  $force  When true, re-uploads every receipt regardless of existing
+     *                       drive_file_id. Use after changing the folder name / path so
+     *                       all receipts land in the new location.
      */
     public function __construct(
         public int $connectedAccountId,
         public int $userId,
+        public bool $force = false,
     ) {
         $this->onQueue('default');
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
         $account = ConnectedAccount::find($this->connectedAccountId);
@@ -49,26 +49,35 @@ class SyncReceiptsToDrive implements ShouldQueue
             $driveService = new GoogleDriveService($account, $organisationName);
         } catch (\Exception $e) {
             Log::error('SyncReceiptsToDrive: failed to init Drive service', [
-                'error' => $e->getMessage(),
+                'error'      => $e->getMessage(),
                 'account_id' => $this->connectedAccountId,
             ]);
 
             return;
         }
 
-        // Get all expenses with receipt files that haven't been synced yet
-        $expenses = Expense::query()
+        $query = Expense::query()
             ->where('user_id', $this->userId)
             ->whereNotNull('receipt_path')
             ->where('receipt_path', '!=', '')
-            ->whereNull('drive_file_id')
-            ->orderBy('date')
-            ->get();
+            ->orderBy('date');
+
+        if (! $this->force) {
+            $query->whereNull('drive_file_id');
+        }
+
+        $expenses = $query->get();
 
         Log::info('SyncReceiptsToDrive: starting sync', [
-            'user_id' => $this->userId,
+            'user_id'          => $this->userId,
+            'force'            => $this->force,
             'expenses_to_sync' => $expenses->count(),
         ]);
+
+        // Resolve root folder and custom path once — reused for every expense.
+        $customFolderId = $account->settings['drive_folder_id'] ?? null;
+        $customPath     = $account->settings['drive_folder_path'] ?? null;
+        $rootFolderId   = $driveService->getOrCreateFolder($customFolderId);
 
         $synced = 0;
         $failed = 0;
@@ -80,7 +89,7 @@ class SyncReceiptsToDrive implements ShouldQueue
                 if (! $fileContents) {
                     Log::warning('SyncReceiptsToDrive: file not found in org-storage', [
                         'expense_id' => $expense->id,
-                        'path' => $expense->receipt_path,
+                        'path'       => $expense->receipt_path,
                     ]);
                     $failed++;
 
@@ -88,43 +97,47 @@ class SyncReceiptsToDrive implements ShouldQueue
                 }
 
                 $extension = pathinfo($expense->receipt_path, PATHINFO_EXTENSION) ?: 'jpg';
-                $filename = ($expense->name ?? 'receipt').'-'.($expense->date?->format('Y-m-d') ?? $expense->id).'.'.$extension;
-                $filename = preg_replace('/[^a-zA-Z0-9._\-]/', '_', $filename);
+                $filename  = ($expense->name ?? 'receipt').'-'.($expense->date?->format('Y-m-d') ?? $expense->id).'.'.$extension;
+                $filename  = preg_replace('/[^a-zA-Z0-9._\-]/', '_', $filename);
 
                 $mimeType = match (strtolower($extension)) {
-                    'pdf' => 'application/pdf',
-                    'png' => 'image/png',
-                    'gif' => 'image/gif',
+                    'pdf'  => 'application/pdf',
+                    'png'  => 'image/png',
+                    'gif'  => 'image/gif',
                     default => 'image/jpeg',
                 };
 
-                $customFolderId = $account->settings['drive_folder_id'] ?? null;
-                $result = $driveService->uploadFile($filename, $fileContents, $mimeType, 'receipts', $customFolderId);
+                // Walk custom path then monthly bucket — same structure as SyncExpenseToDrive.
+                $monthFolder    = ($expense->date ?? now())->format('Y-m');
+                $targetFolderId = $customPath
+                    ? $driveService->navigatePath($rootFolderId, $customPath)
+                    : $rootFolderId;
+                $targetFolderId = $driveService->navigatePath($targetFolderId, $monthFolder);
+
+                $result = $driveService->uploadFileToFolder($filename, $fileContents, $mimeType, $targetFolderId);
 
                 $expense->update([
-                    'drive_file_id' => $result['id'],
-                    'drive_web_link' => $result['webViewLink'],
+                    'drive_file_id'   => $result['id'],
+                    'drive_web_link'  => $result['webViewLink'],
                 ]);
 
                 $synced++;
-
             } catch (\Exception $e) {
                 Log::error('SyncReceiptsToDrive: failed to upload expense', [
                     'expense_id' => $expense->id,
-                    'error' => $e->getMessage(),
+                    'error'      => $e->getMessage(),
                 ]);
                 $failed++;
             }
         }
 
-        // Update last_sync_at on the connected account
         $account->update(['last_sync_at' => now()]);
 
         Log::info('SyncReceiptsToDrive: completed', [
             'user_id' => $this->userId,
-            'synced' => $synced,
-            'failed' => $failed,
-            'total' => $expenses->count(),
+            'synced'  => $synced,
+            'failed'  => $failed,
+            'total'   => $expenses->count(),
         ]);
     }
 }

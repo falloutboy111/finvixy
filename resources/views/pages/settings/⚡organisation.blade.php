@@ -1,6 +1,8 @@
 <?php
 
+use App\Jobs\SyncReceiptsToDrive;
 use App\Models\ConnectedAccount;
+use App\Models\Expense;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -12,6 +14,7 @@ new #[Title('Organisation')] #[Layout('layouts.app.sidebar')] class extends Comp
 
     public string $driveFolderName = '';
     public string $driveFolderPath = '';
+    public bool $syncing = false;
 
     public function mount(): void
     {
@@ -31,6 +34,25 @@ new #[Title('Organisation')] #[Layout('layouts.app.sidebar')] class extends Comp
             ->where('organisation_id', $user->organisation_id)
             ->orderBy('id')
             ->get(['id', 'name', 'email']);
+    }
+
+    #[Computed]
+    public function totalReceiptCount(): int
+    {
+        return Expense::query()
+            ->where('user_id', Auth::id())
+            ->whereNotNull('receipt_path')
+            ->where('receipt_path', '!=', '')
+            ->count();
+    }
+
+    #[Computed]
+    public function syncedReceiptCount(): int
+    {
+        return Expense::query()
+            ->where('user_id', Auth::id())
+            ->whereNotNull('drive_file_id')
+            ->count();
     }
 
     #[Computed]
@@ -85,8 +107,20 @@ new #[Title('Organisation')] #[Layout('layouts.app.sidebar')] class extends Comp
 
         unset($this->googleAccount);
 
-        $this->dispatch('drive-settings-saved');
         session()->flash('status', 'drive-settings-saved');
+    }
+
+    public function resyncAll(): void
+    {
+        $account = $this->googleAccount;
+        if (! $account) {
+            return;
+        }
+
+        SyncReceiptsToDrive::dispatch($account->id, Auth::id(), force: true);
+
+        $this->syncing = true;
+        session()->flash('status', 'resync-started');
     }
 }; ?>
 
@@ -103,6 +137,13 @@ new #[Title('Organisation')] #[Layout('layouts.app.sidebar')] class extends Comp
                 <flux:callout variant="success" icon="check-circle">
                     <flux:callout.heading>{{ __('Drive settings saved') }}</flux:callout.heading>
                     <flux:callout.text>{{ __('New receipts will sync to the updated folder and path.') }}</flux:callout.text>
+                </flux:callout>
+            @endif
+
+            @if (session('status') === 'resync-started')
+                <flux:callout variant="success" icon="arrow-path">
+                    <flux:callout.heading>{{ __('Resync started') }}</flux:callout.heading>
+                    <flux:callout.text>{{ __('All receipts are being pushed to Google Drive in the background. This may take a few minutes.') }}</flux:callout.text>
                 </flux:callout>
             @endif
 
@@ -197,6 +238,43 @@ new #[Title('Organisation')] #[Layout('layouts.app.sidebar')] class extends Comp
                             <span wire:loading wire:target="saveDriveSettings">{{ __('Saving…') }}</span>
                         </flux:button>
                     </form>
+
+                    <flux:separator class="my-6" />
+
+                    {{-- Resync All --}}
+                    <div>
+                        <flux:heading size="sm" class="mb-1">{{ __('Receipt Sync') }}</flux:heading>
+                        <flux:text size="sm" class="text-zinc-400 mb-4">
+                            {{ __('Push all receipt images from storage to the configured Google Drive folder. Use this after changing your folder name or path to re-upload everything to the new location.') }}
+                        </flux:text>
+
+                        <div class="flex items-center gap-4 text-sm text-zinc-400 mb-4">
+                            <div class="flex items-center gap-1.5">
+                                <flux:icon.check-circle class="h-4 w-4 text-emerald-500" />
+                                <span>{{ $this->syncedReceiptCount }} {{ __('synced to Drive') }}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <flux:icon.photo class="h-4 w-4 text-zinc-500" />
+                                <span>{{ $this->totalReceiptCount }} {{ __('total receipts') }}</span>
+                            </div>
+                        </div>
+
+                        <flux:button
+                            variant="danger"
+                            wire:click="resyncAll"
+                            wire:confirm="{{ __('This will re-upload all :count receipts to Google Drive, overwriting any existing Drive links. Continue?', ['count' => $this->totalReceiptCount]) }}"
+                            wire:loading.attr="disabled"
+                            :disabled="$syncing || $this->totalReceiptCount === 0"
+                            icon="arrow-path"
+                        >
+                            <span wire:loading.remove wire:target="resyncAll">
+                                {{ __('Resync All :count Receipts', ['count' => $this->totalReceiptCount]) }}
+                            </span>
+                            <span wire:loading wire:target="resyncAll">
+                                {{ __('Queuing…') }}
+                            </span>
+                        </flux:button>
+                    </div>
                 @else
                     <flux:text size="sm" class="text-zinc-500">
                         {{ __('Connect Google Drive in') }}
