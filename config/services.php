@@ -113,6 +113,26 @@ return [
 
     'lookup' => [
         'monthly_cap' => (int) env('LOOKUP_MONTHLY_CAP', 50),
+        // Max per-retailer Serper queries per price check. Each query counts
+        // against the per-user monthly cap, so fan-out trades depth per check
+        // for number of checks per month (3 → ~16 checks/user/month at cap 50).
+        'retailer_fanout' => (int) env('LOOKUP_RETAILER_FANOUT', 3),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Data Retention
+    |--------------------------------------------------------------------------
+    |
+    | How long (days) raw source artifacts are kept before the
+    | finvixy:prune-receipts command may remove them: raw receipt images in S3
+    | and stored WhatsApp webhook payloads. Derived expense records are NOT
+    | pruned — only the raw source artifacts. Owner-configurable.
+    |
+    */
+
+    'retention' => [
+        'days' => (int) env('RETENTION_DAYS', 90),
     ],
 
     /*
@@ -133,6 +153,22 @@ return [
         'region'           => env('AGENTCORE_REGION', 'eu-central-1'),
         'history_turns'    => (int) env('AGENT_HISTORY_TURNS', 8),
         'idle_reset_hours' => (int) env('AGENT_SESSION_IDLE_RESET', 2),
+
+        // Model name used for usage logging + cost estimation on the Laravel
+        // side. Must track the BEDROCK_MODEL_ID set on the agent runtime
+        // (e.g. claude-haiku-4-5 ↔ ...claude-haiku-4-5...; claude-sonnet-4-6 ↔
+        // eu.anthropic.claude-sonnet-4-6).
+        'model_name' => env('AGENT_MODEL_NAME', 'claude-haiku-4-5'),
+
+        // Pre-emptive per-user cap on agent invocations per calendar month,
+        // checked BEFORE the Bedrock call. Only real runs are counted.
+        'monthly_invocation_cap' => (int) env('MONTHLY_INVOCATION_CAP', 150),
+
+        // Inactivity sweeper: minutes of silence before a session is closed
+        // and its conversation context cleared. Sweeper runs every 5 minutes
+        // but stays inert until SESSION_SWEEPER_ENABLED=true.
+        'inactivity_minutes' => (int) env('SESSION_INACTIVITY_MINUTES', 10),
+        'sweeper_enabled'    => (bool) env('SESSION_SWEEPER_ENABLED', false),
     ],
 
     /*
@@ -160,6 +196,25 @@ return [
     'enclivix_crm' => [
         'base_url' => env('ENCLIVIX_CRM_BASE_URL', 'https://crm.enclivix.com'),
         'token'    => env('ENCLIVIX_CRM_TOKEN'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Finvixy → Enclivix Stats Channel
+    |--------------------------------------------------------------------------
+    |
+    | Separate, PII-FREE operational-stats channel to the Enclivix CRM. Pushes
+    | counts, token usage, cost estimates and timestamps only — never names,
+    | phone numbers, message text or receipt content. Reuses the existing
+    | X-Finvixy-Token secret (services.enclivix_crm.token). STATS_PUSH_ENABLED
+    | and an unset FINVIXY_STATS_URL both act as kill switches.
+    |
+    */
+
+    'finvixy_stats' => [
+        'url'         => env('FINVIXY_STATS_URL'),
+        'enabled'     => (bool) env('STATS_PUSH_ENABLED', true),
+        'account_cap' => (int) env('SERPER_ACCOUNT_CAP', 2500),
     ],
 
     'serper' => [

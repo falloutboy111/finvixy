@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\AgentConversation;
+use App\Models\AgentInvocationUsage;
+use App\Models\AgentSession;
 use App\Models\AiUsageLog;
 use Aws\BedrockAgentCore\BedrockAgentCoreClient;
 use Illuminate\Support\Facades\Http;
@@ -42,6 +44,10 @@ class AgentCoreService
             'user_id'         => (string) $userId,
             'session_id'      => $sessionId,
             'prompt'          => $agentPrompt,
+            // Stable SA retailer/product knowledge, appended to the agent's
+            // system prompt behind the Bedrock prompt-cache checkpoint. Bytes
+            // only change when the DB block's version changes, so it caches.
+            'knowledge'       => app(RetailKnowledgeService::class)->promptBlock(),
         ];
 
         try {
@@ -53,6 +59,13 @@ class AgentCoreService
                 : trim($rawBody);
 
             $usage = is_array($decoded) && isset($decoded['usage']) ? (array) $decoded['usage'] : [];
+
+            // Prefer the model id the agent actually ran (returned in the
+            // envelope since the Sonnet-switch build). AGENT_MODEL_NAME is
+            // only the fallback for older agent deploys that don't report it.
+            $modelName = is_array($decoded) && ! empty($decoded['model'])
+                ? (string) $decoded['model']
+                : null;
 
             Log::info('AgentCore response received', [
                 'org_id'        => $orgId,
@@ -68,7 +81,13 @@ class AgentCoreService
             $this->storeMessage($userId, $orgId, 'user',      $prompt, $isPinned, $expenseId);
             $this->storeMessage($userId, $orgId, 'assistant', $text,   $isPinned, $expenseId);
 
-            $this->logUsage($startTime, $orgId, $userId, true, null, $usage);
+            $this->logUsage($startTime, $orgId, $userId, true, null, $usage, $modelName);
+
+            // Count this real run against the monthly invocation cap and mark
+            // the session active with a completed exchange (sweeper skips
+            // sessions that never had one). Cap rejections never reach here.
+            AgentInvocationUsage::recordInvocation($orgId, $userId);
+            AgentSession::touchActivity($userId, $orgId, isExchange: true);
 
             return $text ?: "Sorry, I couldn't process that right now. Please try again.";
         } catch (\RuntimeException $e) {
@@ -259,7 +278,8 @@ class AgentCoreService
         int $userId,
         bool $success,
         ?string $errorMessage = null,
-        array $usage = []
+        array $usage = [],
+        ?string $modelName = null,
     ): void {
         $responseTimeMs   = (int) round((microtime(true) - $startTime) * 1000);
         $inputTokens      = (int) ($usage['input_tokens'] ?? 0);
@@ -268,18 +288,21 @@ class AgentCoreService
         $cacheWriteTokens = (int) ($usage['cache_write_input_tokens'] ?? 0);
         $totalTokens      = $inputTokens + $outputTokens + $cacheReadTokens + $cacheWriteTokens;
 
+        $modelName = $modelName ?: (string) config('services.agentcore.model_name', 'claude-haiku-4-5');
+
         try {
             AiUsageLog::create([
                 'organisation_id'    => $orgId,
                 'user_id'            => $userId,
                 'service_type'       => 'bedrock_agent',
-                'model_name'         => 'claude-haiku-4-5',
+                'model_name'         => $modelName,
                 'prompt_tokens'      => $inputTokens,
                 'completion_tokens'  => $outputTokens,
                 'total_tokens'       => $totalTokens,
                 'cache_read_tokens'  => $cacheReadTokens,
                 'cache_write_tokens' => $cacheWriteTokens,
                 'estimated_cost'     => AiUsageLog::calculateCost([
+                    'model_name'         => $modelName,
                     'input_tokens'       => $inputTokens,
                     'output_tokens'      => $outputTokens,
                     'cache_read_tokens'  => $cacheReadTokens,

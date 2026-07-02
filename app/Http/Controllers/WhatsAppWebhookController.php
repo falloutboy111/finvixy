@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Jobs\InvokeAgentJob;
 use App\Jobs\ProcessExpenseImage;
+use App\Models\AgentInvocationUsage;
+use App\Models\AgentSession;
 use App\Models\Expense;
 use App\Models\PendingConfirmation;
 use App\Models\User;
@@ -11,6 +13,7 @@ use App\Models\WhatsappWebhook;
 use App\Services\ConfirmationService;
 use App\Services\OrgStorageService;
 use App\Services\PlanLimitService;
+use App\Services\UploadValidatorService;
 use App\Services\WhatsAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,7 +41,9 @@ class WhatsAppWebhookController extends Controller
         $token     = $request->query('hub_verify_token');
         $challenge = $request->query('hub_challenge');
 
-        if ($mode === 'subscribe' && $token === config('services.whatsapp.verify_token')) {
+        $verifyToken = (string) config('services.whatsapp.verify_token');
+
+        if ($mode === 'subscribe' && $verifyToken !== '' && hash_equals($verifyToken, (string) $token)) {
             Log::info('WhatsApp webhook verified');
 
             return response($challenge, 200)->header('Content-Type', 'text/plain');
@@ -104,10 +109,11 @@ class WhatsAppWebhookController extends Controller
         $appSecret = config('services.whatsapp.app_secret');
 
         if (empty($appSecret)) {
-            // No secret configured; allow through but warn so it's visible in logs
-            Log::warning('WHATSAPP_APP_SECRET not set — skipping signature verification');
+            // Fail closed: without the app secret we cannot verify authenticity,
+            // so we must reject rather than accept unsigned webhooks.
+            Log::error('WHATSAPP_APP_SECRET not set — rejecting webhook (cannot verify signature)');
 
-            return true;
+            return false;
         }
 
         $rawBody  = $request->getContent();
@@ -190,6 +196,10 @@ class WhatsAppWebhookController extends Controller
             'status'          => 'processing',
         ]);
 
+        // Inactivity tracking: every inbound message (text, media, interactive)
+        // keeps the user's conversation session alive for the sweeper.
+        AgentSession::touchActivity($user->id, $user->organisation_id);
+
         match (true) {
             in_array($type, ['image', 'document'], true) => $this->handleMediaMessage($message, $from, $messageId, $user, $webhook),
             $type === 'text'                              => $this->handleTextMessage($message, $from, $user, $webhook),
@@ -245,6 +255,33 @@ class WhatsAppWebhookController extends Controller
         if (! $content) {
             $webhook->update(['status' => 'failed', 'error_message' => 'Media download failed']);
             $this->whatsApp->sendText($from, 'Failed to download the image. Please try sending it again.');
+
+            return;
+        }
+
+        // Validate the downloaded bytes before storing or OCR'ing them. WhatsApp
+        // media bypasses the web upload form, so this is the only type/size/content
+        // gate on the receipt-scan path.
+        $validator = app(UploadValidatorService::class);
+        $validation = $type === 'document'
+            ? $validator->validatePdf($content)
+            : $validator->validateImage($content);
+
+        if (! $validation['valid']) {
+            $webhook->update([
+                'status'        => 'failed',
+                'error_message' => 'Upload rejected: '.$validation['error'],
+            ]);
+            $this->whatsApp->sendText(
+                $from,
+                "That didn't look like a valid receipt image — please resend a clear photo or PDF."
+            );
+
+            Log::warning('WhatsApp media rejected by validator', [
+                'message_id' => $messageId,
+                'user_id'    => $user->id,
+                'error'      => $validation['error'],
+            ]);
 
             return;
         }
@@ -316,6 +353,24 @@ class WhatsAppWebhookController extends Controller
         }
 
         RateLimiter::hit($key, 3600);
+
+        // Pre-emptive monthly invocation cap — checked BEFORE any Bedrock call.
+        // Rejections are not counted; only real runs increment the counter
+        // (in AgentCoreService after a successful invocation).
+        $monthlyCap  = (int) config('services.agentcore.monthly_invocation_cap', 150);
+        $monthlyUsed = AgentInvocationUsage::getCount($user->organisation_id, $user->id);
+
+        if ($monthlyUsed >= $monthlyCap) {
+            $resetDate = now()->addMonthNoOverflow()->startOfMonth()->format('j F');
+            $this->whatsApp->sendText(
+                $from,
+                "You've used all {$monthlyCap} of your assistant messages for this month. "
+                ."Your limit resets on {$resetDate}. Receipt scanning still works — keep sending those! 🧾"
+            );
+            $webhook->update(['status' => 'ignored', 'error_message' => 'Monthly invocation cap reached']);
+
+            return;
+        }
 
         // If the user previously tapped "Type a project name", route their text to
         // the agent with enough context to identify the project and call set_expense_project.

@@ -30,9 +30,20 @@ class GoogleDriveService
 
         // Refresh token if expired
         if ($this->client->isAccessTokenExpired() && isset($account->credentials['refresh_token'])) {
-            $this->client->fetchAccessTokenWithRefreshToken($account->credentials['refresh_token']);
+            $newToken = $this->client->fetchAccessTokenWithRefreshToken($account->credentials['refresh_token']);
 
-            $newToken = $this->client->getAccessToken();
+            // A revoked or invalid refresh token returns an error array rather than
+            // throwing. Never merge that into stored credentials — it would corrupt
+            // the account and mask the real failure. Log and leave credentials intact.
+            if (isset($newToken['error'])) {
+                Log::warning('Google Drive token refresh failed', [
+                    'account_id' => $account->id,
+                    'error'      => $newToken['error'],
+                ]);
+
+                throw new \RuntimeException('Google Drive authorization has expired — please reconnect the account.');
+            }
+
             $account->update([
                 'credentials' => array_merge($account->credentials, $newToken),
                 'expires_at' => isset($newToken['expires_in']) ? now()->addSeconds($newToken['expires_in']) : null,

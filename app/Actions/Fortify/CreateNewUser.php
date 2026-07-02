@@ -4,6 +4,7 @@ namespace App\Actions\Fortify;
 
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
+use App\Jobs\PushSignupEvent;
 use App\Models\Organisation;
 use App\Models\Plan;
 use App\Models\User;
@@ -42,7 +43,7 @@ class CreateNewUser implements CreatesNewUsers
             'whatsapp_number.regex' => 'Please enter a valid phone number (e.g. +27 012 345 6789).',
         ])->validate();
 
-        return DB::transaction(function () use ($input) {
+        $user = DB::transaction(function () use ($input) {
             $freePlan = Plan::query()->where('code', 'free')->first();
 
             $organisation = Organisation::create([
@@ -61,5 +62,11 @@ class CreateNewUser implements CreatesNewUsers
                 'whatsapp_enabled' => true,
             ]);
         });
+
+        // PII-free signup notification to the Enclivix stats channel. Queued so a
+        // CRM outage never blocks signup; failures are swallowed by the job.
+        PushSignupEvent::dispatch();
+
+        return $user;
     }
 }

@@ -64,7 +64,10 @@ return [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
+            // Dedicated region for the org-storage bucket so it cannot silently
+            // drift from AWS_DEFAULT_REGION (which other services default to
+            // us-east-1). Set ORG_STORAGE_REGION to the bucket's real region.
+            'region' => env('ORG_STORAGE_REGION', env('AWS_DEFAULT_REGION')),
             'bucket' => env('ORG_STORAGE_BUCKET', env('AWS_BUCKET', 'finvixy-org-storage')),
             'root' => 'finvixy',
             'url' => env('AWS_URL'),

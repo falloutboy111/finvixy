@@ -389,13 +389,21 @@ class AgentToolService
             return ['matched' => false, 'error' => 'product_name contains personal data', 'observed' => [], 'web' => []];
         }
 
-        // Step 2 — receipt observations (never capped, always returned)
+        // Step 2 — normalise the receipt label into searchable retail terms
+        // ("RC" → rice cakes, brand → category) via the knowledge block.
+        $knowledge  = app(RetailKnowledgeService::class);
+        $normalised = $knowledge->normalise($productName);
+
+        // Step 3 — receipt observations (never capped, always returned).
+        // Query with the RAW name — receipts store the messy label.
         $observed = $this->queryObservedPrices($orgId, $userId, $productName);
 
-        // Step 3 — Serper fallback when observations are thin; check monthly cap first
+        // Step 4 — Serper fallback when observations are thin; check monthly cap first
         $cap  = (int) config('services.lookup.monthly_cap', 50);
         $used = PriceLookupUsage::getCount($orgId, $userId);
         $web  = [];
+        $retailersQueried = [];
+        $searched = false;
 
         if (count($observed) < 3) {
             if ($used >= $cap) {
@@ -403,7 +411,9 @@ class AgentToolService
 
                 return [
                     'matched'           => ! empty($observed),
+                    'match_status'      => empty($observed) ? 'not_searched' : 'found',
                     'product'           => $productName,
+                    'normalised_product' => $normalised,
                     'observed'          => $observed,
                     'web'               => [],
                     'note'              => "Monthly price-check limit reached — resets {$resetDate}.",
@@ -412,22 +422,61 @@ class AgentToolService
                 ];
             }
 
+            $searched = true;
             $location = $this->resolveLocation();
-            $web      = $this->fetchSerperPrices($productName, $location);
 
-            // Count every Serper attempt (call was made, result or not)
-            PriceLookupUsage::recordLookup($orgId, $userId);
-            $used++;
+            // Per-retailer fan-out: one targeted query per known retailer, in
+            // priority order. Each query burns one lookup credit, so fan-out
+            // is capped (LOOKUP_RETAILER_FANOUT) and also bounded by the
+            // user's remaining monthly credits.
+            $fanout    = max(1, (int) config('services.lookup.retailer_fanout', 3));
+            $remaining = $cap - $used;
+            $retailers = array_slice($knowledge->retailers(), 0, min($fanout, $remaining));
+
+            foreach ($retailers as $retailer) {
+                $results = $this->fetchSerperPrices("{$normalised} {$retailer}", $location);
+                $retailersQueried[] = $retailer;
+
+                foreach ($results as $item) {
+                    $aggregator = $knowledge->aggregatorIn($item['title'].' '.$item['snippet']);
+
+                    $web[] = [
+                        'title'        => $item['title'],
+                        'snippet'      => $item['snippet'],
+                        'retailer'     => $retailer,
+                        'source_type'  => $aggregator ? 'aggregator' : 'retailer',
+                        'source_label' => $aggregator
+                            ? "via {$aggregator}, a comparison site — verify in-store"
+                            : $retailer,
+                    ];
+                }
+
+                // Count every Serper attempt (call was made, result or not)
+                PriceLookupUsage::recordLookup($orgId, $userId);
+                $used++;
+            }
         }
 
+        // Zero-match semantics: "couldn't find a match" (searched, nothing
+        // usable) is distinct from "price steady" — the agent must never say
+        // "no cheaper options found" when nothing matched at all.
+        $matchStatus = (! empty($observed) || ! empty($web))
+            ? 'found'
+            : ($searched ? 'no_match' : 'not_searched');
+
         return [
-            'matched'           => ! empty($observed) || ! empty($web),
-            'product'           => $productName,
-            'observed'          => $observed,
-            'web'               => $web,
-            'note'              => 'web prices are indicative, not exact',
-            'lookups_remaining' => max(0, $cap - $used),
-            'limit_reached'     => false,
+            'matched'            => $matchStatus === 'found',
+            'match_status'       => $matchStatus,
+            'product'            => $productName,
+            'normalised_product' => $normalised,
+            'observed'           => $observed,
+            'web'                => $web,
+            'retailers_queried'  => $retailersQueried,
+            'note'               => $matchStatus === 'no_match'
+                ? "No price match found for '{$normalised}' — say \"couldn't find a match\", not \"no cheaper options\"."
+                : 'web prices are indicative, not exact; label aggregator results per source_label',
+            'lookups_remaining'  => max(0, $cap - $used),
+            'limit_reached'      => false,
         ];
     }
 

@@ -84,4 +84,20 @@ class EnclivixCrmService
             throw new \RuntimeException("CRM patchExpenseProject failed ({$response->status()}): ".$response->body());
         }
     }
+
+    /**
+     * Delete a Finvixy-originated expense from the CRM (right-to-erasure).
+     * A 404 is treated as success so the operation is idempotent — an already
+     * deleted (or never synced) expense is a no-op, not a failure.
+     */
+    public function deleteExpense(string $crmExpenseId): void
+    {
+        $response = $this->http()->delete("/api/v1/expenses/{$crmExpenseId}");
+
+        if ($response->status() === 404 || $response->successful()) {
+            return;
+        }
+
+        throw new \RuntimeException("CRM deleteExpense failed ({$response->status()}): ".$response->body());
+    }
 }

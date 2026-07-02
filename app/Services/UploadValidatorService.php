@@ -80,11 +80,6 @@ class UploadValidatorService
             }
         }
 
-        // Basic malware signature check
-        if ($this->hasEvilPatterns($fileContents)) {
-            $errors[] = "File contains suspicious patterns. Possible malware.";
-        }
-
         Log::info('Image validation', [
             'file_size' => $fileSize,
             'mime_type' => $mimeType,
@@ -244,6 +239,10 @@ class UploadValidatorService
 
     /**
      * Check for evil patterns/signatures that suggest malware.
+     *
+     * Only applied to PDFs. Raster image bytes (JPEG/PNG) are effectively random
+     * and routinely trip these regexes, rejecting legitimate receipt photos — so
+     * this scan is deliberately not run on images.
      */
     private function hasEvilPatterns(string $content): bool
     {
