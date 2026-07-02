@@ -1,19 +1,21 @@
 {
     "agents": [
-        "copilot"
+        "claude_code"
     ],
     "guidelines": true,
     "herd_mcp": false,
     "mcp": true,
     "nightwatch_mcp": false,
     "packages": [
-        "laravel/fortify"
+        "laravel/fortify",
+        "laravel/cashier-paddle"
     ],
     "sail": false,
     "skills": [
         "fluxui-development",
         "livewire-development",
         "tailwindcss-development",
+        "cashier-paddle-development",
         "developing-with-fortify"
     ]
 }
